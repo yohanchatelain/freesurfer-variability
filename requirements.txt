@@ -1,0 +1,13 @@
+boutiques
+collections 
+imageio
+itertools 
+json
+kaleido
+livingpark_utils
+numpy 
+pandas 
+pingouin
+plotly
+rich
+scipy.stats 
