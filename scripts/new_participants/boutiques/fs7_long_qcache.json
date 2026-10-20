@@ -1,0 +1,49 @@
+{
+    "schema-version": "0.5",
+    "name": "FreeSurfer7-Recon-all-qcache",
+    "container-image": {
+        "index": "docker://",
+        "image": "ansokol/freesurfer_7.3.2",
+        "type": "singularity"
+    },
+    "tool-version": "v7.3.2",
+    "command-line": "export SUBJECTS_DIR=`pwd`; export FS_LICENSE=`pwd`/[LICENSE_FILE]; recon-all -long [TP] [BASE] -qcache",
+    "author": "Laboratory for Computational Neuroimaging ",
+    "error-codes": [
+        {
+            "description": "Crashed",
+            "code": 1
+        }
+    ],
+    "inputs": [
+        {
+            "name": "License file",
+            "value-key": "[LICENSE_FILE]",
+            "optional": false,
+            "description": "Valid license file needed to run FreeSurfer.",
+            "id": "license",
+            "type": "File"
+        },
+        {
+            "name": "timepoint",
+            "id": "tp",
+            "optional": false,
+            "value-key": "[TP]",
+            "description": "input timepoint",
+            "type": "String"
+        },
+        {
+            "name": "base template",
+            "id": "base",
+            "optional": false,
+            "value-key": "[BASE]",
+            "description": "subject template",
+            "type": "String"
+        }
+    ],
+    "custom": {
+        "cbrain:author": "Andrzej Sokolowski <andrzej.sokolowski@concordia.ca>",
+        "cbrain:readonly-input-files": true
+    },
+    "description": "resample longitudinal data onto the average subject (called fsaverage) & smooth it at a range of FWHM: (https://surfer.nmr.mgh.harvard.edu/fswiki/qcache)."
+}

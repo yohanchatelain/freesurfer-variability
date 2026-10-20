@@ -1,0 +1,120 @@
+{
+    "schema-version": "0.5",
+
+    "name": "FreeSurfer8-long_mris_slopes",
+
+    "container-image": {
+        "index": "docker://",
+        "image": "freesurfer/freesurfer:8.2.0",
+        "type": "singularity"
+    },
+
+    "tool-version": "v8.2.0",
+
+    "command-line": "export SUBJECTS_DIR=`pwd`; export FS_LICENSE=`pwd`/[LICENSE_FILE]; long_mris_slopes --qdec [QDEC] --meas [MEASURE] --hemi [HEMI] --do-avg --do-rate --do-pc1 --do-pc1fit --do-spc --do-stack --do-label --time [TIME] --qcache fsaverage --sd $SUBJECTS_DIR --stack-avg [SAVG] --stack-rate [SRATE] --stack-pc1fit [SPC1FIT] --stack-pc1 [SPC1] --stack-spc [SSPC]",
+
+    "author": "Laboratory for Computational Neuroimaging",
+
+    "error-codes": [
+        {
+            "description": "Crashed",
+            "code": 1
+        }
+    ],
+
+    "inputs": [
+        {
+            "name": "License file",
+            "value-key": "[LICENSE_FILE]",
+            "optional": false,
+            "description": "Valid FreeSurfer license file.",
+            "id": "license",
+            "type": "File"
+        },
+
+        {
+            "name": "QDEC table",
+            "id": "qdec",
+            "optional": false,
+            "value-key": "[QDEC]",
+            "description": "Qdec longitudinal design table",
+            "type": "String"
+        },
+
+        {
+            "name": "Measure",
+            "id": "meas",
+            "optional": false,
+            "value-key": "[MEASURE]",
+            "description": "Surface measure",
+            "type": "String",
+            "value-choices": ["thickness", "volume"]
+        },
+
+        {
+            "name": "Hemisphere",
+            "id": "hemi",
+            "optional": false,
+            "value-key": "[HEMI]",
+            "description": "Hemisphere selection",
+            "type": "String",
+            "value-choices": ["lh", "rh"]
+        },
+
+        {
+            "name": "time",
+            "id": "time",
+            "optional": false,
+            "value-key": "[TIME]",
+            "description": "Time variable in QDEC table",
+            "type": "String"
+        },
+
+        {
+            "name": "stack_avg",
+            "id": "stack_avg",
+            "optional": false,
+            "value-key": "[SAVG]",
+            "description": "Output stacked average maps",
+            "type": "String"
+        },
+
+        {
+            "name": "stack_rate",
+            "id": "stack_rate",
+            "optional": false,
+            "value-key": "[SRATE]",
+            "description": "Output stacked rate maps",
+            "type": "String"
+        },
+
+        {
+            "name": "stack_pc1fit",
+            "id": "stack_pc1fit",
+            "optional": false,
+            "value-key": "[SPC1FIT]",
+            "description": "Output stacked PC1 fit maps",
+            "type": "String"
+        },
+
+        {
+            "name": "stack_pc1",
+            "id": "stack_pc1",
+            "optional": false,
+            "value-key": "[SPC1]",
+            "description": "Output stacked PC1 maps",
+            "type": "String"
+        },
+
+        {
+            "name": "stack_spc",
+            "id": "stack_spc",
+            "optional": false,
+            "value-key": "[SSPC]",
+            "description": "Output stacked SPC maps",
+            "type": "String"
+        }
+    ],
+
+    "description": "FS8 longitudinal two-stage model using long_mris_slopes with qcache support."
+}

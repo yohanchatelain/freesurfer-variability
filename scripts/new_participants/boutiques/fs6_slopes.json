@@ -1,0 +1,113 @@
+{
+    "schema-version": "0.5",
+    "name": "FreeSurfer6-long_mris_slopes",
+    "container-image": {
+        "index": "docker://",
+        "image": "ansokol/freesurfer_6.0.1",
+        "type": "singularity"
+    },
+    "tool-version": "v6.0.1",
+    "command-line": "export SUBJECTS_DIR=`pwd`; export FS_LICENSE=`pwd`/[LICENSE_FILE]; long_mris_slopes --qdec [QDEC] --meas [MEASURE] --hemi [HEMI] --do-avg --do-rate --do-pc1 --do-pc1fit --do-spc --do-stack --do-label --time [TIME] --qcache fsaverage --sd $SUBJECTS_DIR --stack-avg [SAVG] --stack-rate [SRATE] --stack-pc1fit [SPC1FIT] --stack-pc1 [SPC1] --stack-spc [SSPC]",
+    "author": "Laboratory for Computational Neuroimaging ",
+    "error-codes": [
+        {
+            "description": "Crashed",
+            "code": 1
+        }
+    ],
+    "inputs": [
+        {
+            "name": "License file",
+            "value-key": "[LICENSE_FILE]",
+            "optional": false,
+            "description": "Valid license file needed to run FreeSurfer.",
+            "id": "license",
+            "type": "File"
+        },
+        {
+            "name": "qdec table",
+            "id": "qdec",
+            "optional": false,
+            "value-key": "[QDEC]",
+            "description": "qdec table",
+            "type": "String"
+        },
+        {
+            "name": "measure",
+            "id": "meas",
+            "optional": false,
+            "value-key": "[MEASURE]",
+            "description": "measure",
+            "type": "String",
+            "value-choices": [
+                "thickness",
+                "volume"
+            ]
+        },
+        {
+            "name": "hemisphere",
+            "id": "hemi",
+            "optional": false,
+            "value-key": "[HEMI]",
+            "description": "hemisphere",
+            "type": "String",
+            "value-choices": [
+                "lh",
+                "rh"
+            ]
+        },
+        {
+            "name": "time",
+            "id": "time",
+            "optional": false,
+            "value-key": "[TIME]",
+            "description": "time variable in qdec table",
+            "type": "String"
+        },
+        {
+            "name": "stack_avg",
+            "id": "stack_avg",
+            "optional": false,
+            "value-key": "[SAVG]",
+            "description": "Output stacked avg maps on <qtarget> for all fwhm levels",
+            "type": "String"
+        },
+        {
+            "name": "stack_rate",
+            "id": "stack_rate",
+            "optional": false,
+            "value-key": "[SRATE]",
+            "description": "Output stacked rate maps on <qtarget> for all fwhm levels",
+            "type": "String"
+        },
+        {
+            "name": "stack_pc1fit",
+            "id": "stack_pc1fit",
+            "optional": false,
+            "value-key": "[SPC1FIT]",
+            "description": "Output stacked pc1fit maps on <qtarget> for all fwhm levels",
+            "type": "String"
+        },
+        {
+            "name": "stack_pc1",
+            "id": "stack_pc1",
+            "optional": false,
+            "value-key": "[SPC1]",
+            "description": "Output stacked pc1 maps on <qtarget> for all fwhm levels",
+            "type": "String"
+        },
+        {
+            "name": "stack_spc",
+            "id": "stack_spc",
+            "optional": false,
+            "value-key": "[SSPC]",
+            "description": "Output stacked spc maps on <qtarget> for all fwhm levels",
+            "type": "String"
+        }
+    ],
+    "custom": {
+        "cbrain:author": "Andrzej Sokolowski <andrzej.sokolowski@concordia.ca>",
+        "cbrain:readonly-input-files": true
+    },
+    "description": "Prepare the data with long_mris_slopes for longitudinal two stage model (https://surfer.nmr.mgh.harvard.edu/fswiki/LongitudinalTwoStageModel)."
+}
