@@ -1,0 +1,50 @@
+{
+    "schema-version": "0.5",
+    "name": "FreeSurfer8-Recon-all-long-qcache",
+    "container-image": {
+        "index": "docker://",
+        "image": "freesurfer/freesurfer:8.2.0",
+        "type": "singularity"
+    },
+    "tool-version": "v8.2.0",
+
+    "command-line": "export SUBJECTS_DIR=`pwd`; export FS_LICENSE=`pwd`/[LICENSE_FILE]; recon-all -long [TP] [BASE] -qcache",
+
+    "author": "Laboratory for Computational Neuroimaging",
+
+    "error-codes": [
+        {
+            "description": "Crashed",
+            "code": 1
+        }
+    ],
+
+    "inputs": [
+        {
+            "name": "License file",
+            "value-key": "[LICENSE_FILE]",
+            "optional": false,
+            "description": "Valid license file needed to run FreeSurfer.",
+            "id": "license",
+            "type": "File"
+        },
+        {
+            "name": "timepoint",
+            "id": "tp",
+            "optional": false,
+            "value-key": "[TP]",
+            "description": "Input timepoint subject",
+            "type": "String"
+        },
+        {
+            "name": "base template",
+            "id": "base",
+            "optional": false,
+            "value-key": "[BASE]",
+            "description": "Base longitudinal template subject",
+            "type": "String"
+        }
+    ],
+
+    "description": "Runs recon-all -long with qcache generation for longitudinal FreeSurfer 8 processing."
+}

@@ -1,0 +1,68 @@
+{
+    "suggested-resources": {
+        "ram": 16384,
+        "walltime-estimate": 1440,
+        "cpu-cores": 4
+    },
+    "schema-version": "0.5",
+
+    "name": "FreeSurfer-Recon-all-long_v8.2.0",
+
+    "container-image": {
+        "index": "docker://",
+        "image": "freesurfer/freesurfer:8.2.0",
+        "type": "singularity"
+    },
+
+    "tool-version": "v8.2.0",
+
+    "command-line": "export SUBJECTS_DIR=`pwd`; export FS_LICENSE=`pwd`/[LICENSE_FILE]; recon-all -long [TP] [BASE] -all",
+
+    "author": "Laboratory for Computational Neuroimaging",
+
+    "error-codes": [
+        {
+            "description": "Crashed",
+            "code": 1
+        }
+    ],
+
+    "inputs": [
+        {
+            "name": "License file",
+            "id": "license",
+            "type": "File",
+            "optional": false,
+            "description": "Valid license file needed to run FreeSurfer.",
+            "value-key": "[LICENSE_FILE]"
+        },
+        {
+            "name": "Timepoint",
+            "id": "tp",
+            "type": "String",
+            "optional": false,
+            "description": "Cross-sectional subject ID.",
+            "value-key": "[TP]"
+        },
+        {
+            "name": "Base template",
+            "id": "base",
+            "type": "String",
+            "optional": false,
+            "description": "Longitudinal base subject ID.",
+            "value-key": "[BASE]"
+        }
+    ],
+
+    "output-files": [
+        {
+            "name": "Output",
+            "id": "output",
+            "optional": false,
+            "description": "Longitudinally processed subject.",
+            "path-template": "[TP].long.[BASE]"
+        }
+    ],
+
+    "description": "Longitudinally processes a cross-sectional FreeSurfer 8 subject using an existing base template with recon-all -long."
+}
