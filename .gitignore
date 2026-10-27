@@ -1,7 +1,7 @@
 # Data (symlinks to shared project storage, licenses, containers, large results)
 data/
 # Private paper material (manuscript + reviews)
-paper/
+/paper/
 # Python / notebooks
 __pycache__/
 *.pyc
@@ -12,6 +12,6 @@ __pycache__/
 scripts/new_participants/lists/
 # Local planning notes
 TODO.md
-EXP2_mindboggle_plan.md
+EXP*.md
 # Generated outputs (may contain participant-level tables)
 outputs/

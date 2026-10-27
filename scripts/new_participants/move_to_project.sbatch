@@ -9,6 +9,7 @@
 # so participants still running or failed stay on scratch.
 # Usage: FSVV_NEW_DEST=<project dir> sbatch --account=<account> --chdir=$SCRATCH/fsvv_newpart/slurm move_to_project.sbatch
 set -euo pipefail
+shopt -s nullglob  # a version with no finished archive moves nothing (instead of rsync failing on a literal *.tar)
 work=${FSVV_NEW_WORK:-$SCRATCH/fsvv_newpart}
 dest=${FSVV_NEW_DEST:?set FSVV_NEW_DEST to the destination folder on the project space}
 
