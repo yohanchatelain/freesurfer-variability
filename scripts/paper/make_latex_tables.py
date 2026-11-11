@@ -191,8 +191,8 @@ def main():
     clusters_table(tab, "table5", cluster_frame(clusters, "corr"))
     clusters_table(tab, "table6", cluster_frame(clusters, "group"))
 
-    # Supplement. S1-S5: version tests and PD vs HC; S7: Tables 3-4 with QC covariates; S8: Tables 5-6 with QC
-    # covariates; S9-S18 / S19-S28: MRIQC correlations (CSV only). S6 and S29-S38 (QPN) wait for the QPN inputs.
+    # Supplement. S1-S5: version tests and PD vs HC; S6: version tests, QPN PD; S7: Tables 3-4 with QC covariates;
+    # S8: Tables 5-6 with QC covariates; S9-S18 / S19-S28 / S29-S38 (QPN PD): MRIQC correlations (CSV only).
     note = (r"Paired t-tests between versions; raw $p$, $^{*}$ significant after Bonferroni correction "
             r"($\alpha = 0.05/187$ for volume, $0.05/148$ for surface area and thickness). $^{\dagger}$Label not "
             r"produced by FS8 (volume 0 in every image): significant by construction in the FS8 comparisons.")
@@ -214,6 +214,13 @@ def main():
         version_tests(tab, name, TABLES / src, "t", cap, f"tab:{name[5:]}",
                       mark=absent_fs8 if name in ("tableS1", "tableS2", "tableS3") else ())
 
+    # S6: QPN replication sample (PD), from 04_qpn_replication and 07
+    qpn_tests = pd.read_csv(fsvv.OUT / "qpn_version_paired_ttests.csv")
+    n_qpn_pd = int(pd.read_csv(fsvv.OUT / "qpn_demographics.csv", index_col="dx_group").loc["PD", "n"])
+    version_tests(tab, "tableS6", TABLES / "tableS6_version_ttests_QPN.csv", "t",
+                  f"Differences between FreeSurfer versions in the QPN replication sample, PD (n = {n_qpn_pd}). {note}",
+                  "tab:S6", mark=set(qpn_tests.loc[qpn_tests["absent_in_FS8"], "key"]))
+
     for name, src, stat in [("tableS7a", "clinical_ancova_hc_pdnonmci_qc_covariates.csv", "F"),
                             ("tableS7b", "clinical_partial_corr_updrs_qc_covariates.csv", "r")]:
         res = pd.read_csv(fsvv.OUT / src)
@@ -227,7 +234,8 @@ def main():
     clusters_table(tab, "tableS8b", cluster_frame(qc_clusters, "group"))
 
     for src, dst in [("tableS9-S18_mriqc_corr_all.csv", "TablesS9-S18_mriqc_correlations_all_images.csv"),
-                     ("tableS19-S28_mriqc_corr_PD.csv", "TablesS19-S28_mriqc_correlations_PD_images.csv")]:
+                     ("tableS19-S28_mriqc_corr_PD.csv", "TablesS19-S28_mriqc_correlations_PD_images.csv"),
+                     ("tableS29-S38_mriqc_corr_QPN_PD.csv", "TablesS29-S38_mriqc_correlations_QPN_PD_images.csv")]:
         shutil.copy(TABLES / src, data / dst)
         print("wrote", data / dst)
 

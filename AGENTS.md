@@ -37,3 +37,13 @@ Only aggregate results (group statistics, figures without identifiable rows) may
 - Do not paste participant-level data into commit messages, PR descriptions, issues or any
   external service.
 - If in doubt, do not publish: ask the user first.
+
+## Notebooks: use the paired `.py` scripts
+
+Every notebook is paired with a Jupytext "percent" script of the same name (`jupytext.toml`).
+The `.py` holds the same code and markdown without outputs.
+
+- Read, search and edit the `.py`, not the `.ipynb`: it is much smaller and never shows
+  participant-level outputs.
+- After editing a `.py` outside Jupyter, run `jupytext --sync <file>.py` so the `.ipynb` is
+  updated (Jupyter does this on save when the jupytext extension is installed).
