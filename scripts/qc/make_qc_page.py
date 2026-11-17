@@ -15,6 +15,11 @@ import fsvv  # noqa: E402
 
 QC = fsvv.OUT / "qc"
 images = sorted(p.stem for p in (QC / "png").glob("*.png"))
+# Optional: python make_qc_page.py flagged  -> index_flagged.html with only the images of flagged.txt (qc_prescreen.py)
+subset = sys.argv[1] if len(sys.argv) > 1 else None
+if subset:
+    keep = {s.strip() for s in open(QC / f"{subset}.txt") if s.strip()}
+    images = [i for i in images if i in keep]
 rows = "\n".join(
     f'<section id="{html.escape(i)}"><h3>{html.escape(i)}</h3><img src="png/{html.escape(i)}.png" loading="lazy">'
     f'<div><label><input type="radio" name="{i}" value="pass"> pass</label> '
@@ -40,5 +45,6 @@ function q(x){{return '"'+String(x||'').replace(/"/g,'""')+'"'}}
 function dl(){{const lines=['image,rating,version,comment'];document.querySelectorAll('section').forEach(s=>{{const r=R[s.id]||{{}};lines.push([s.id,r.rating,r.version,r.comment].map(q).join(','))}});
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines.join('\\n')],{{type:'text/csv'}}));a.download='ratings.csv';a.click()}}
 </script></body></html>"""
-(QC / "index.html").write_text(page)
-print("wrote", QC / "index.html", len(images), "images")
+name = f"index_{subset}.html" if subset else "index.html"
+(QC / name).write_text(page)
+print("wrote", QC / name, len(images), "images")

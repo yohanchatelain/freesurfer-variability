@@ -58,7 +58,8 @@ print("QPN versions:", QPN_VERSIONS)
 
 qpn = pd.read_csv(QPN_DIR / "QPN_subjects.csv")[["PATNO", "sex", "age", "dx_group"]].set_index("PATNO")
 demo = qpn.groupby("dx_group").agg(n=("age", "size"), women=("sex", lambda s: (s == "F").sum()),
-                                   age_mean=("age", "mean"), age_sd=("age", "std"))
+                                   age_mean=("age", "mean"), age_sd=("age", "std"),
+                                   age_min=("age", "min"), age_max=("age", "max"))
 demo.to_csv(fsvv.out("qpn_demographics.csv"))
 demo.round(1)
 

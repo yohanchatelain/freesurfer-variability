@@ -57,6 +57,23 @@ corr.to_csv(fsvv.out("clinical_partial_corr_updrs.csv"), index=False)
 anc.to_csv(fsvv.out("clinical_ancova_hc_pdnonmci.csv"), index=False)
 
 # %% [markdown]
+# ### Direction of the group differences, and sensitivity to head size
+# `direction` / `diff_hc_minus_pd`: covariate-adjusted HC − PD-non-MCI difference (> 0: larger in HC). Sensitivity
+# analysis: the same ANCOVA with total intracranial volume (FreeSurfer TIV of the first visit, each version) as an
+# extra covariate.
+
+# %%
+anc_tiv = fsvv.clinical_ancova(clin, extra_covar=["TIV_{v}_first"])
+anc_tiv.to_csv(fsvv.out("clinical_ancova_hc_pdnonmci_tiv.csv"), index=False)
+print("TIV by group (cm3, FS7):", (clin.groupby("dx_group")["TIV_FS7_first"].mean() / 1000).round(1).to_dict())
+summary = {}
+for name, res in [("age, sex", anc), ("age, sex, TIV", anc_tiv)]:
+    sig = res[(res["time"] == "base") & (res["p"] < fsvv.ALPHA / fsvv.N_SUBCORTICAL)]
+    summary[name] = sig.groupby("version").agg(n_significant=("p", "size"),
+                                               larger_in_PD=("direction", lambda d: int((d < 0).sum())))
+pd.concat(summary, axis=1)
+
+# %% [markdown]
 # ### Check: FS5–7 only reproduces the submitted Table 2
 # With FS8, one PD-non-MCI participant has no longitudinal FS8 output and is dropped (124 PD-non-MCI).
 # Requiring only FS5–7 gives the submitted sample (125 PD-non-MCI, 106 HC) and its values

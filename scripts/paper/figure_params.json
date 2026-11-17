@@ -1,0 +1,35 @@
+{
+ "fig2": {
+  "font": 19,
+  "grid_lw": 0.5,
+  "height": 27.0,
+  "legend_font": 20,
+  "title_font": 24,
+  "width": 27.0
+ },
+ "fig3": {
+  "box_width": 0.8999999999999999,
+  "fliers": false,
+  "font": 20,
+  "height": 40.0,
+  "legend_cols": 5,
+  "legend_font": 20,
+  "marker_size": 100,
+  "title_font": 24,
+  "width": 20.0,
+  "xlim": "auto",
+  "xmax": null,
+  "xscale": "log"
+ },
+ "fig7": {
+  "cmap": "cold_hot",
+  "colorbar_font": 16,
+  "cut_y": "10,-5,-20",
+  "font": 20,
+  "row_height": 4.0,
+  "style": "glass_lyrz",
+  "threshold": 1.3,
+  "vmax": 5.0,
+  "width": 24.0
+ }
+}

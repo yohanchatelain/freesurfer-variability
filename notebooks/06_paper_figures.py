@@ -27,6 +27,7 @@
 # | Table 4 — UPDRS-III vs subcortical volumes (partial correlation) | `table4_corr_subcortical.csv` | `clinical_partial_corr_updrs.csv` (03) |
 # | Table 5 — vertex-wise UPDRS-III vs thickness | `table5_vertexwise_corr.csv` | `outputs/glm` |
 # | Table 6 — vertex-wise HC vs PD-non-MCI thickness | `table6_vertexwise_group.csv` | `outputs/glm` |
+# | Tables 3–4 as volume maps (R1) | `fig_subcortical_group`, `fig_subcortical_corr` | `clinical_*.csv` (03) |
 # | Figures 7–10 — vertex-wise maps | `fig7_corr_base`, `fig8_corr_long`, `fig9_group_base`, `fig10_group_long` | `outputs/glm` |
 #
 # Each `fig*` has a CSV of the values it shows in `outputs/tables`. p-values are raw; significance uses
@@ -177,6 +178,70 @@ table3
 table4
 
 # %% [markdown]
+# ### Tables 3–4 as volume maps (Reviewer 1)
+#
+# The 14 structures of Tables 3–4 coloured on fsaverage's aseg (FS7 container, MNI305 space), one row per version,
+# with the colour map and scale of the vertex-wise maps: −log10(p) for the ANCOVA (unsigned F test), signed −log10(p)
+# for the correlations (sign of r). Shown when p < .05; the colour-bar tick marks the Bonferroni threshold (0.05/14).
+
+# %%
+import subprocess
+
+FS_MRI = fsvv.OUT / "fsaverage" / "mri"
+if not (FS_MRI / "aseg.mgz").exists():  # copy fsaverage's volumes from the FS7 container (as for the surfaces)
+    FS_MRI.mkdir(parents=True, exist_ok=True)
+    for f in ("aseg.mgz", "T1.mgz"):
+        subprocess.run(["apptainer", "exec", str(fsvv.DATA / "source_files/freesurfer/ansokol-freesurfer_7.3.2.simg"),
+                        "cp", f"/usr/local/freesurfer/subjects/fsaverage/mri/{f}", str(FS_MRI / f)], check=True)
+aseg = nib.load(FS_MRI / "aseg.mgz")
+aseg_data = np.asarray(aseg.dataobj)
+LUT_IDS = {"Thalamus": (10, 49), "Caudate": (11, 50), "Putamen": (12, 51), "Pallidum": (13, 52),
+           "Hippocampus": (17, 53), "Amygdala": (18, 54), "Accumbens-area": (26, 58)}
+LABEL_ID = {f"{side}-{s}": ids[i] for s, ids in LUT_IDS.items() for i, side in enumerate(("Left", "Right"))}
+assert set(LABEL_ID) == set(fsvv.CLINICAL_TABLE_ROIS)
+
+
+def stat_volume(values):
+    """{roi: value} -> volume on fsaverage's aseg grid (0 outside the structures)."""
+    vol = np.zeros(aseg_data.shape, dtype=np.float32)
+    for roi, val in values.items():
+        if np.isfinite(val):
+            vol[aseg_data == LABEL_ID[roi]] = val
+    return nib.Nifti1Image(vol, aseg.affine)
+
+
+def plot_subcortical(results, signed, name, label):
+    times = [("base", "Baseline"), ("long", "Rate of change")]
+    fig, axes = plt.subplots(len(fsvv.VERSIONS), len(times), figsize=(10, 1.9 * len(fsvv.VERSIONS) + 1))
+    fig.subplots_adjust(left=0.05, right=0.99, top=0.93, bottom=0.12, wspace=0.02, hspace=0.05)
+    for row, v in zip(axes, fsvv.VERSIONS):
+        for ax, (time, title) in zip(row, times):
+            r = results[(results["version"] == v) & (results["time"] == time) & results["roi"].isin(LABEL_ID)]
+            val = -np.log10(r["p"].clip(lower=1e-300))
+            if signed:
+                val = val * np.sign(r["r"])
+            plotting.plot_stat_map(stat_volume(dict(zip(r["roi"], val))), bg_img=str(FS_MRI / "T1.mgz"),
+                                   display_mode="y", cut_coords=(10, -5, -20), axes=ax, figure=fig,
+                                   threshold=1.3, vmax=VMAX, cmap="cold_hot", colorbar=False, annotate=False,
+                                   draw_cross=False, black_bg=False)
+            if v == fsvv.VERSIONS[0]:
+                ax.set_title(title, fontsize=9)
+        row[0].text(-0.03, 0.5, v, transform=row[0].transAxes, rotation=90, va="center", ha="right", fontsize=10)
+    sm = plt.cm.ScalarMappable(cmap="cold_hot", norm=plt.Normalize(-VMAX, VMAX))
+    cb = fig.colorbar(sm, cax=fig.add_axes([0.35, 0.06, 0.3, 0.02]), orientation="horizontal")
+    bonf = -np.log10(0.05 / fsvv.N_SUBCORTICAL)
+    cb.set_ticks([-VMAX, -bonf, -1.3, 0, 1.3, bonf, VMAX])
+    cb.set_ticklabels([f"{-VMAX}", f"{-bonf:.2f}", "−1.3", "0", "1.3", f"{bonf:.2f}", f"{VMAX}"], fontsize=7)
+    cb.set_label(label, fontsize=8)
+    fsvv.savefig(fig, name, dpi=200)
+    plt.close(fig)
+
+
+VMAX = 5
+plot_subcortical(anc, False, "fig_subcortical_group", "−log10(p), ANCOVA HC vs PD-non-MCI (Bonferroni threshold marked)")
+plot_subcortical(corr, True, "fig_subcortical_corr", "signed −log10(p), partial correlation with UPDRS-III")
+
+# %% [markdown]
 # ## Tables 5–6 — vertex-wise cortical thickness (significant clusters)
 #
 # Clusters of `mri_glmfit-sim` (cluster-forming threshold p < .05, two-sided; cluster-wise p < .05, corrected for both
@@ -214,6 +279,8 @@ table6
 # Same colour scale in every panel.
 
 # %%
+import paper_figures as pf  # p-value colour bar shared with Figures 7-8
+
 FSAVERAGE = fsvv.OUT / "fsaverage"
 VIEWS = [("lh", "lateral"), ("lh", "medial"), ("rh", "lateral"), ("rh", "medial")]
 VMAX = 5
@@ -236,19 +303,19 @@ def plot_glm(analysis, time, name, title):
         row[0].text2D(-0.05, 0.5, v, transform=row[0].transAxes, rotation=90, va="center", fontsize=10)
     for ax, (hemi, view) in zip(axes[0], VIEWS):
         ax.set_title(f"{hemi} {view}", fontsize=9)
-    sm = plt.cm.ScalarMappable(cmap="cold_hot", norm=plt.Normalize(-VMAX, VMAX))
-    cb = fig.colorbar(sm, cax=fig.add_axes([0.35, 0.06, 0.3, 0.02]), orientation="horizontal")
-    cb.set_label("signed −log10(p), cluster-corrected", fontsize=8)
+    sides = ("PD-non-MCI > HC", "HC > PD-non-MCI") if analysis == "group" else ("negative r", "positive r")
+    pf._p_colorbar(fig, [0.3, 0.06, 0.4, 0.02], "cold_hot", VMAX, 1.3, signed=True, label="cluster-wise p",
+                   font=8, n_bonf=None, sides=sides)
     fig.suptitle(title, fontsize=10)
     fsvv.savefig(fig, name, dpi=200)
     plt.close(fig)
     return pd.Series(n_vertices, name=name)
 
 
-figs = [("corr", "base", "fig7_corr_base", "Figure 7. Correlation between UPDRS-III and cortical thickness (baseline)"),
-        ("corr", "long", "fig8_corr_long", "Figure 8. Correlation between the change in UPDRS-III and the rate of change in thickness"),
-        ("group", "base", "fig9_group_base", "Figure 9. HC vs PD-non-MCI, cortical thickness (baseline)"),
-        ("group", "long", "fig10_group_long", "Figure 10. HC vs PD-non-MCI, rate of change in cortical thickness")]
+figs = [("corr", "base", "fig7_corr_base", "Correlation between UPDRS-III and cortical thickness (baseline)"),
+        ("corr", "long", "fig8_corr_long", "Correlation between the change in UPDRS-III and the rate of change in thickness"),
+        ("group", "base", "fig9_group_base", "HC vs PD-non-MCI, cortical thickness (baseline)"),
+        ("group", "long", "fig10_group_long", "HC vs PD-non-MCI, rate of change in cortical thickness")]
 n_sig = pd.concat([plot_glm(*f) for f in figs], axis=1)
 n_sig.to_csv(TABLES / "fig7-10_significant_vertices.csv")
 n_sig  # vertices in a significant cluster

@@ -43,10 +43,16 @@ def table1(out):
     rows = [" & ".join([tex(i)] + [tex(v) for v in r]) + r" \\" for i, r in zip(t.index, t.values)]
     groups = [g for _, g in t.columns]
     body = "\n".join(rows)
-    write(out / "table1.tex", rf"""\begin{{tabular}}{{lccccc}}
+    blocks, rules, col = [], [], 2  # one header block per first-level column (sample)
+    for sample in dict.fromkeys(s for s, _ in t.columns):
+        k = sum(s == sample for s, _ in t.columns)
+        blocks.append(rf"\multicolumn{{{k}}}{{c}}{{{sample}}}")
+        rules.append(rf"\cmidrule(lr){{{col}-{col + k - 1}}}")
+        col += k
+    write(out / "table1.tex", rf"""\begin{{tabular}}{{l{'c' * len(groups)}}}
 \toprule
- & \multicolumn{{3}}{{c}}{{Cross-sectional}} & \multicolumn{{2}}{{c}}{{Longitudinal}} \\
-\cmidrule(lr){{2-4}}\cmidrule(lr){{5-6}}
+ & {' & '.join(blocks)} \\
+{''.join(rules)}
  & {' & '.join(groups)} \\
 \midrule
 {body}
@@ -232,6 +238,25 @@ def main():
     qc_clusters = fsvv.read_cluster_summaries(root=fsvv.OUT / "glm_qc")
     clusters_table(tab, "tableS8a", cluster_frame(qc_clusters, "corr"))
     clusters_table(tab, "tableS8b", cluster_frame(qc_clusters, "group"))
+
+    # S40: asymmetry of the version differences (08_variability_by_type)
+    a = pd.read_csv(fsvv.OUT / "asymmetry_summary.csv")
+    order = {"Volume (subcortical)": 0, "Volume": 1, "Surface area": 2, "Cortical thickness": 3}
+    pair_order = {fsvv.label(p): i for i, p in enumerate(fsvv.PAIRS)}
+    a = a.sort_values(["measure", "pair"], key=lambda c: c.map(order if c.name == "measure" else pair_order))
+    lines = []
+    for measure, g in a.groupby("measure", sort=False):
+        lines.append(rf"\midrule\multicolumn{{5}}{{l}}{{\textbf{{{tex(measure)}}}}} \\")
+        lines += [rf"{tex(r.pair)} & {r.tests} & {r.significant} & {r.left_larger} & {r.right_larger} \\"
+                  for r in g.itertuples()]
+    body = "\n".join(lines)
+    write(tab / "tableS40.tex", rf"""\begin{{tabular}}{{lrrrr}}
+\toprule
+Version pair & Tests & Significant & Left larger & Right larger \\
+{body}
+\bottomrule
+\end{{tabular}}
+""")
 
     for src, dst in [("tableS9-S18_mriqc_corr_all.csv", "TablesS9-S18_mriqc_correlations_all_images.csv"),
                      ("tableS19-S28_mriqc_corr_PD.csv", "TablesS19-S28_mriqc_correlations_PD_images.csv"),

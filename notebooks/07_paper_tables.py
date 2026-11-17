@@ -102,6 +102,14 @@ assert len(long_) == len(glm_patno), (len(long_), len(glm_patno))
 
 table1 = pd.concat({"Cross-sectional": summary(cross_groups), "Longitudinal": summary(long_groups, clinical=True)},
                    axis=1).fillna("")
+# Replication sample: QPN PD (04_qpn_replication; sex and age only in the QPN tabular data)
+q = pd.read_csv(fsvv.OUT / "qpn_demographics.csv", index_col="dx_group").loc["PD"]
+table1[("Replication", "QPN PD")] = ""
+table1.loc["n", ("Replication", "QPN PD")] = f"{int(q['n'])}"
+table1.loc["age (y)", ("Replication", "QPN PD")] = f"{q['age_mean']:.1f} ± {q['age_sd']:.1f}"
+table1.loc["age range", ("Replication", "QPN PD")] = f"{q['age_min']:.1f} - {q['age_max']:.1f}"
+men = int(q["n"] - q["women"])
+table1.loc["sex (male, %)", ("Replication", "QPN PD")] = f"{men}, {men / q['n'] * 100:.1f}%"
 table1.to_csv(TABLES / "table1_descriptive.csv")
 table1_tests = pd.concat([
     tests(pd.concat([cross_groups["PD-non-MCI"], cross_groups["PD-MCI"]]), cross_groups["HC"], "cross-sectional, PD vs HC"),

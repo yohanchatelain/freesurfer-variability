@@ -15,3 +15,4 @@ TODO.md
 EXP*.md
 # Generated outputs (may contain participant-level tables)
 outputs/
+results/

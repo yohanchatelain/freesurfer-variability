@@ -40,7 +40,8 @@ LIGHT_FILES = ["mri/aseg.mgz", "mri/aparc+aseg.mgz", "mri/aparc.a2009s+aseg.mgz"
 
 version, task = sys.argv[1], int(sys.argv[2])
 job = pd.read_csv(QPN / "lists/qpn_jobs.csv", index_col="task").loc[task]
-subject, t1w = job["subject"], job["t1w"]
+subject = job["subject"]
+t1w = job.get(f"t1w_{version}", job.get("t1w"))  # per-version input if the list has one (scripts/crosscluster)
 sd = WORK / version
 sd.mkdir(parents=True, exist_ok=True)
 os.chdir(sd)  # SUBJECTS_DIR = `pwd` in every descriptor

@@ -414,6 +414,21 @@ def absent_labels(table, version="FS8"):
             if kind == "vol" and f"{stem}_{version}" in table and (table[f"{stem}_{version}"].fillna(0) == 0).all()]
 
 
+def incomparable_labels(table, version="FS8", reference="FS7"):
+    """aseg labels that `version` does not produce (volume 0) or defines differently (median volume more than 10 times
+    smaller or larger than in `reference`, e.g. FS8 CSF, which includes the extracerebral CSF). Their differences with
+    `version` reflect the label definition, not a measurement difference."""
+    out = set(absent_labels(table, version))
+    for roi in ASEG_ROIS:
+        a, b = f"{roi}_{version}", f"{roi}_{reference}"
+        if a in table and b in table:
+            with np.errstate(invalid="ignore", divide="ignore"):  # 0/0 for labels empty in both versions
+                r = table[a].median() / table[b].median()
+            if np.isfinite(r) and r > 0 and not 0.1 <= r <= 10:
+                out.add(roi)
+    return out
+
+
 def group_variability_tests(table, group1, group2, pairs=PAIRS):
     """Two-sample t-tests (group1 vs group2) of the relative version differences."""
     rows = []
@@ -644,6 +659,15 @@ def clinical_partial_correlations(table, versions=VERSIONS, rois=CLINICAL_ROIS, 
     return pd.DataFrame(rows, columns=["version", "roi", "time", "n", "r", "ci95", "p"])
 
 
+def _adjusted_difference(table, dv, covar):
+    """HC - PD-non-MCI difference adjusted for the covariates (OLS coefficient of an HC indicator, the same model as
+    the ANCOVA): > 0 larger in HC, < 0 larger in PD-non-MCI."""
+    import statsmodels.api as sm
+    d = table[[dv, "dx_group", *covar]].dropna()
+    X = sm.add_constant(pd.concat([(d["dx_group"] == "HC").astype(float).rename("HC"), d[covar].astype(float)], axis=1))
+    return float(sm.OLS(d[dv].astype(float), X).fit().params["HC"])
+
+
 def clinical_ancova(table, versions=VERSIONS, rois=CLINICAL_ROIS, extra_covar=()):
     """ANCOVA HC vs PD-non-MCI on volumes (baseline) and % change (longitudinal); covariates as in
     clinical_partial_correlations."""
@@ -657,11 +681,15 @@ def clinical_ancova(table, versions=VERSIONS, rois=CLINICAL_ROIS, extra_covar=()
             for v in versions:
                 if time == "long" and (v, roi) in EXCLUDED_LONGITUDINAL:
                     continue
-                a = ancova(data=table, dv=dv_fmt.format(roi=roi, v=v), between="dx_group",
+                dv = dv_fmt.format(roi=roi, v=v)
+                a = ancova(data=table, dv=dv, between="dx_group",
                            covar=[*covar, *(c.format(v=v) for c in extra_covar)])
                 pcol = "p_unc" if "p_unc" in a else "p-unc"
-                rows.append((v, roi, time, float(a["F"].iloc[0]), float(a[pcol].iloc[0])))
-    return pd.DataFrame(rows, columns=["version", "roi", "time", "F", "p"])
+                diff = _adjusted_difference(table, dv, [*covar, *(c.format(v=v) for c in extra_covar)])
+                rows.append((v, roi, time, float(a["F"].iloc[0]), float(a[pcol].iloc[0]), float(np.sign(diff)), diff))
+    # direction / diff_hc_minus_pd: covariate-adjusted HC - PD-non-MCI difference (mm3 at baseline, % points of change
+    # longitudinally) and its sign (+1: larger in HC), to sign the maps; F and p are unsigned
+    return pd.DataFrame(rows, columns=["version", "roi", "time", "F", "p", "direction", "diff_hc_minus_pd"])
 
 
 def clinical_table(results, stat, time, rois=CLINICAL_TABLE_ROIS, versions=VERSIONS, n_tests=N_SUBCORTICAL):
@@ -713,7 +741,7 @@ def savefig(fig, name, dpi=200):
     fig.savefig(FIGURES / f"{name}.pdf", dpi=dpi, bbox_inches="tight")  # dpi of the rasterized parts
 
 
-def _grouped_boxes(ax, data, regions, groups, colors, horizontal=True, width=0.8):
+def _grouped_boxes(ax, data, regions, groups, colors, horizontal=True, width=0.8, fontsize=7, showfliers=True):
     """Box plots of data[group][region] (lists of values), grouped by region."""
     n = len(groups)
     w = width / n
@@ -722,7 +750,7 @@ def _grouped_boxes(ax, data, regions, groups, colors, horizontal=True, width=0.8
         vals = [np.asarray(data[g][r], dtype=float) for r in regions]
         vals = [v[~np.isnan(v)] for v in vals]
         bp = ax.boxplot(vals, positions=pos, widths=w * 0.9, vert=not horizontal, patch_artist=True,
-                        showfliers=True, flierprops=dict(markersize=1.5, alpha=0.4, markeredgewidth=0),
+                        showfliers=showfliers, flierprops=dict(markersize=1.5, alpha=0.4, markeredgewidth=0),
                         medianprops=dict(color="black", linewidth=0.8), whiskerprops=dict(linewidth=0.6),
                         capprops=dict(linewidth=0.6), boxprops=dict(linewidth=0.6), manage_ticks=False)
         for b in bp["boxes"]:
@@ -730,16 +758,19 @@ def _grouped_boxes(ax, data, regions, groups, colors, horizontal=True, width=0.8
             b.set_alpha(0.85)
     ticks = np.arange(len(regions))
     (ax.set_yticks if horizontal else ax.set_xticks)(ticks)
-    (ax.set_yticklabels if horizontal else ax.set_xticklabels)(regions, fontsize=7,
+    (ax.set_yticklabels if horizontal else ax.set_xticklabels)(regions, fontsize=fontsize,
                                                                **({} if horizontal else {"rotation": 90}))
     (ax.set_ylim if horizontal else ax.set_xlim)(-0.6, len(regions) - 0.4)
     ax.grid(axis="x" if horizontal else "y", linestyle=":", linewidth=0.5)
 
 
-def plot_variability(table, kind, hemi=None, pairs=PAIRS, versions=VERSIONS, ax=None, xlim=None):
+def plot_variability(table, kind, hemi=None, pairs=PAIRS, versions=VERSIONS, ax=None, xlim=None, fontsize=7,
+                     showfliers=True, xscale="linear", marker_size=14, legend=True, box_width=0.8):
     """Between-version absolute differences (boxes, one colour per pair) vs between-subject SD (markers).
 
     kind="aseg" for subcortical volumes, or "vol"/"surf"/"ct" for the cortical atlas (set_atlas) with hemi="lh"/"rh"/"bi".
+    xlim="whiskers" fits the axis to the box whiskers and SD markers (outliers beyond are clipped); xscale="log" uses a
+    log axis. The defaults reproduce the figures of 02.
     """
     import matplotlib.pyplot as plt
     if kind == "aseg":
@@ -755,24 +786,44 @@ def plot_variability(table, kind, hemi=None, pairs=PAIRS, versions=VERSIONS, ax=
         unit = MEASURE_UNITS[kind]
         title = f"{MEASURE_NAMES[kind]} ({hemi})"
     groups = [label(p) for p in pairs]
-    data = {label(p): {r: table[diff_col(p, r)].values for r in regions} for p in pairs}
+    skip = incomparable_labels(table) if kind == "aseg" and "FS8" in versions else set()
+    # FS8 pairs of labels FS8 does not produce or defines differently: no box (the difference is the definition)
+    data = {label(p): {r: (np.full(len(table), np.nan) if "FS8" in p and r in skip else table[diff_col(p, r)].values)
+                       for r in regions} for p in pairs}
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 0.22 * len(regions) + 1.5))
-    _grouped_boxes(ax, data, regions, groups, PAIR_COLORS, horizontal=True)
+    _grouped_boxes(ax, data, regions, groups, PAIR_COLORS, horizontal=True, width=box_width, fontsize=fontsize,
+                   showfliers=showfliers)
     y = np.arange(len(regions))
+    sds = []
     for v in versions:
-        sd = [table[est_col(v, r)].std() for r in regions]
-        ax.scatter(sd, y, marker=VERSION_MARKERS[v], s=14, color="black", linewidths=0.8, zorder=5,
+        sd = [np.nan if v == "FS8" and r in skip else table[est_col(v, r)].std() for r in regions]
+        sds += sd
+        ax.scatter(sd, y, marker=VERSION_MARKERS[v], s=marker_size, color="black", linewidths=0.8, zorder=5,
                    label=f"SD {v}")
     ax.invert_yaxis()
-    ax.set_xlabel(f"{MEASURE_NAMES['vol'] if kind == 'aseg' else MEASURE_NAMES[kind]} ({unit})")
-    ax.set_title(title, fontsize=10)
-    if xlim:
+    ax.set_xlabel(f"{MEASURE_NAMES['vol'] if kind == 'aseg' else MEASURE_NAMES[kind]} ({unit})", fontsize=fontsize + 1)
+    ax.set_title(title, fontsize=fontsize + 3)
+    ax.tick_params(axis="x", labelsize=fontsize)
+    if xscale == "log":
+        ax.set_xscale("log")
+    if isinstance(xlim, str) and xlim == "whiskers":
+        vals = [np.asarray(v, float) for g in data.values() for v in g.values()]
+        vals = [v[np.isfinite(v)] for v in vals if np.isfinite(v).any()]
+        hi = max([min(v.max(), np.percentile(v, 75) + 1.5 * (np.percentile(v, 75) - np.percentile(v, 25))) for v in vals]
+                 + [s for s in sds if np.isfinite(s)])
+        if xscale == "log":
+            lo = min(max(v[v > 0].min(), np.percentile(v[v > 0], 25) / 10) for v in vals if (v > 0).any())
+            ax.set_xlim(lo, hi * 1.3)
+        else:
+            ax.set_xlim(-0.02 * hi, hi * 1.05)
+    elif xlim:
         ax.set_xlim(*xlim)
     handles = [plt.Rectangle((0, 0), 1, 1, color=PAIR_COLORS[g]) for g in groups]
     h2, l2 = ax.get_legend_handles_labels()
-    ax.legend(handles + h2, groups + l2, fontsize=7, ncol=2, loc="lower right", frameon=True,
-              title="between-version |diff| / between-subject SD", title_fontsize=7)
+    if legend:
+        ax.legend(handles + h2, groups + l2, fontsize=fontsize, ncol=2, loc="lower right", frameon=True,
+                  title="between-version |diff| / between-subject SD", title_fontsize=fontsize)
     return ax
 
 
