@@ -20,7 +20,8 @@ from matplotlib.patches import Patch
 import fsvv
 
 PARAMS_FILE = fsvv.ROOT / "scripts" / "paper" / "figure_params.json"
-PAPER_NAMES = {"fig2": "fig2_pvalues_cortical", "fig3": "variability_subcortical", "fig4": "variability_vol",
+PAPER_NAMES = {"fig2": "fig2_pvalues_cortical", "fig3": "variability_subcortical",
+               "fig3a": "variability_subcortical_part1", "fig3b": "variability_subcortical_part2", "fig4": "variability_vol",
                "fig5": "variability_surf", "fig6": "variability_ct", "fig7": "fig_subcortical_group",
                "fig8": "fig_subcortical_corr"}
 KIND_OF = {"fig4": "vol", "fig5": "surf", "fig6": "ct"}
@@ -28,10 +29,16 @@ DEFAULTS = {
     "fig2": dict(width=16, height=22, font=10, title_font=12, legend_font=10, grid_lw=0.3),
     "fig3": dict(layout="enigma", metric="ratio", width=12, height=16, font=10, title_font=13, legend_font=10,
                  fliers=False, xscale="linear", xlim="whiskers", xmax=None, marker_size=30, box_width=0.8,
-                 legend_cols=5, ratio_max=2.0, ratio_cmap="RdBu_r", lower_height=0.3),
+                 legend_cols=5, ratio_max=2.0, ratio_cmap="RdBu_r", lower_height=0.3, flier_size=3.0),
+    # Figure 3 split in two (see _aseg_parts), each part with its own settings
+    "fig3a": dict(width=17, height=10, font=20, title_font=24, legend_font=20, fliers=False, flier_size=3.0,
+                  xscale="linear", xlim="whiskers", xmax=None, marker_size=100, box_width=0.85, legend_cols=5),
+    "fig3b": dict(width=17, height=34, font=20, title_font=24, legend_font=20, fliers=False, flier_size=3.0,
+                  xscale="linear", xlim="whiskers", xmax=None, marker_size=100, box_width=0.85, legend_cols=5),
     "fig4": dict(layout="ratio_heatmap", hemis="lh+rh", width=12, height=18, font=9, title_font=12, legend_font=9,
                  fliers=False, xscale="linear", xlim="whiskers", xmax=None, marker_size=30, box_width=0.8,
-                 legend_cols=5, ratio_max=2.0, ratio_cmap="RdBu_r", lobe_split=True, preview_part=1),
+                 legend_cols=5, ratio_max=2.0, ratio_cmap="RdBu_r", lobe_split=True, preview_part=1,
+                 flier_size=3.0),
     "fig7": dict(style="glass_subcortical", width=9, row_height=2.0, font=12, colorbar_font=10, vmax=5.0, threshold=1.3,
                  cmap="cold_hot", cut_y="10,-5,-20"),
 }
@@ -58,8 +65,9 @@ def load_data():
 
 
 def load_params():
+    """Defaults updated by the saved settings (keys no longer in DEFAULTS are dropped)."""
     saved = json.loads(PARAMS_FILE.read_text()) if PARAMS_FILE.exists() else {}
-    return {k: {**v, **saved.get(k, {})} for k, v in DEFAULTS.items()}
+    return {k: {**v, **{kk: vv for kk, vv in saved.get(k, {}).items() if kk in v}} for k, v in DEFAULTS.items()}
 
 
 def save_to_paper(fig_id, fig, params):
@@ -122,27 +130,44 @@ def _style_axes(ax, title_font, xmax, xscale):
         ax.set_xlim(lo, xmax)
 
 
+def _aseg_parts():
+    """Figure 3 split: part 1 = lateral ventricles and cerebellum white matter and cortex (left and right), part 2 =
+    the other structures. Their differences and SDs are much larger, so on a shared linear axis they squash the others."""
+    large = [r for r in fsvv.ASEG_PLOT_ORDER if "Cerebellum" in r or r.endswith("-Lateral-Ventricle")]
+    return {1: (large, "Subcortical volumes (a)"),
+            2: ([r for r in fsvv.ASEG_PLOT_ORDER if r not in large], "Subcortical volumes (b)")}
+
+
 def draw_variability(fig_id, width, height, font=10, title_font=13, legend_font=10, fliers=False, xscale="linear",
-                     xlim="whiskers", xmax=None, marker_size=30, box_width=0.8, legend_cols=5):
-    """Figure 3 (fig_id "fig3": subcortical) or 4-6 ("fig4"/"fig5"/"fig6": cortical lh and rh)."""
+                     xlim="whiskers", xmax=None, marker_size=30, box_width=0.8, legend_cols=5, part=None,
+                     flier_size=3.0):
+    """Figure 3 (fig_id "fig3": subcortical) or 4-6 ("fig4"/"fig5"/"fig6": cortical lh and rh).
+
+    fliers=True draws the outliers (size flier_size, colour of the pair); with xlim="whiskers" those beyond the whiskers
+    and SD markers are clipped, xlim="auto" shows them all.
+    Figure 3 with part=1 or 2 draws only that part of _aseg_parts() (figures "fig3a" and "fig3b").
+    """
     table = load_data()["table"]
     kw = dict(fontsize=font, showfliers=fliers, xscale=xscale, xlim=xlim if xlim != "auto" else None,
-              marker_size=marker_size, legend=False, box_width=box_width)
+              marker_size=marker_size, legend=False, box_width=box_width, flier_size=flier_size)
     if fig_id == "fig3":
+        regions, title = _aseg_parts()[part] if part else (fsvv.ASEG_PLOT_ORDER, None)
+        n_rows = int(np.ceil((len(fsvv.PAIRS) + len(fsvv.VERSIONS)) / legend_cols)) + 1  # + legend title
         fig, ax = plt.subplots(figsize=(width, height))
-        fsvv.plot_variability(table, "aseg", ax=ax, **kw)
+        fsvv.plot_variability(table, "aseg", ax=ax, regions=regions, title=title, **kw)
         _style_axes(ax, title_font, xmax, xscale)
-        axes = [ax]
-    else:
-        fig, axes = plt.subplots(1, 2, figsize=(width, height), sharex=True)
-        for ax, hemi in zip(axes, fsvv.HEMIS):
-            fsvv.plot_variability(table, KIND_OF[fig_id], hemi, ax=ax, **kw)
-        lims = [a.get_xlim() for a in axes]
-        axes[0].set_xlim(min(l[0] for l in lims), max(l[1] for l in lims))
-        for ax in axes:
-            _style_axes(ax, title_font, xmax, xscale)
+        _legend_below(fig, ax, legend_font, legend_cols)
+        fig.tight_layout(rect=(0, n_rows * legend_font * 1.8 / 72 / height, 1, 1))
+        return fig
+    fig, axes = plt.subplots(1, 2, figsize=(width, height), sharex=True)
+    for ax, hemi in zip(axes, fsvv.HEMIS):
+        fsvv.plot_variability(table, KIND_OF[fig_id], hemi, ax=ax, **kw)
+    lims = [a.get_xlim() for a in axes]
+    axes[0].set_xlim(min(l[0] for l in lims), max(l[1] for l in lims))
+    for ax in axes:
+        _style_axes(ax, title_font, xmax, xscale)
     _legend_below(fig, axes[0], legend_font, legend_cols)
-    fig.tight_layout(rect=(0, 0.06 if fig_id == "fig3" else 0.035, 1, 1))
+    fig.tight_layout(rect=(0, 0.035, 1, 1))
     return fig
 
 
@@ -181,7 +206,7 @@ LOBE_PARTS = {1: ["limbic", "frontal", "temporal"], 2: ["occipital", "parietal",
 def draw_cortical(fig_id, layout="ratio_heatmap", hemis="lh+rh", width=12, height=18, font=9, title_font=12,
                   legend_font=9, fliers=False, xscale="linear", xlim="whiskers", xmax=None, marker_size=30,
                   box_width=0.8, legend_cols=5, ratio_max=2.0, ratio_cmap="RdBu_r", lobe_split=False,
-                  preview_part=1):
+                  preview_part=1, flier_size=3.0):
     """Figures 4-6 (volume, area, thickness): between-version |difference| vs between-subject SD.
 
     layout: "ratio_heatmap" (median |diff| / mean SD of the two versions, regions x pairs, grouped by lobe),
@@ -190,7 +215,7 @@ def draw_cortical(fig_id, layout="ratio_heatmap", hemis="lh+rh", width=12, heigh
     kind = KIND_OF[fig_id]
     if layout == "boxes":
         return draw_variability(fig_id, width, height, font, title_font, legend_font, fliers, xscale, xlim, xmax,
-                                marker_size, box_width, legend_cols)
+                                marker_size, box_width, legend_cols, flier_size=flier_size)
     vals = _cortical_values(kind, hemis)
     order, lobe_of, lobes = _lobe_order()
     if lobe_split:  # keep only the lobes of the requested part
@@ -267,7 +292,7 @@ def draw_cortical(fig_id, layout="ratio_heatmap", hemis="lh+rh", width=12, heigh
             regs = [r for r in order if lobe_of[r] == l]
             data = {p: {r: diffs[p][r].values for r in regs} for p in pairs}
             fsvv._grouped_boxes(ax, data, regs, pairs, fsvv.PAIR_COLORS, horizontal=True, width=box_width,
-                                fontsize=font, showfliers=fliers)
+                                fontsize=font, showfliers=fliers, flier_size=flier_size)
             for v in fsvv.VERSIONS:
                 ax.scatter(sds.loc[regs, v], np.arange(len(regs)), marker=fsvv.VERSION_MARKERS[v], color="black",
                            s=marker_size, linewidths=0.8, zorder=5, label=f"SD {v}")
@@ -571,6 +596,8 @@ def draw_subcortical(fig_id, style="glass_ortho", width=9, row_height=2.0, font=
 def draw(fig_id, **params):
     if fig_id == "fig2":
         return draw_fig2(**params)
+    if fig_id in ("fig3a", "fig3b"):
+        return draw_variability("fig3", part=1 if fig_id == "fig3a" else 2, **params)
     if fig_id == "fig3":
         p = dict(params)
         if p.pop("layout", "boxes") == "enigma":

@@ -40,7 +40,7 @@ RANGES = {  # parameter: (min, max, step)
     "width": (4, 30, 0.5), "height": (4, 40, 0.5), "row_height": (1, 4, 0.1),
     "font": (5, 20, 1), "title_font": (6, 24, 1), "legend_font": (5, 20, 1), "colorbar_font": (5, 20, 1),
     "grid_lw": (0, 1, 0.05), "marker_size": (5, 150, 5), "box_width": (0.3, 1.0, 0.05), "legend_cols": (1, 8, 1),
-    "vmax": (2, 10, 0.5), "threshold": (0.5, 3, 0.1), "ratio_max": (1.2, 5, 0.1), "lower_height": (0.15, 0.6, 0.05),
+    "flier_size": (0.5, 10, 0.5), "vmax": (2, 10, 0.5), "threshold": (0.5, 3, 0.1), "ratio_max": (1.2, 5, 0.1), "lower_height": (0.15, 0.6, 0.05),
 }
 CHOICES = {
     "xscale": ["linear", "log"], "xlim": ["whiskers", "auto"],
@@ -50,7 +50,8 @@ CHOICES = {
     "ratio_cmap": ["RdBu_r", "PuOr_r", "coolwarm", "magma_r"],
     "cmap": ["cold_hot", "hot", "RdBu_r", "coolwarm", "viridis"],
 }
-TITLES = {"fig2": "Fig 2 p-values", "fig3": "Fig 3 subcortical", "fig4": "Fig 4 volume", "fig5": "Fig 5 area",
+TITLES = {"fig2": "Fig 2 p-values", "fig3": "Fig 3 subcortical (full)", "fig3a": "Fig 3a subcortical",
+          "fig3b": "Fig 3b subcortical", "fig4": "Fig 4 volume", "fig5": "Fig 5 area",
           "fig6": "Fig 6 thickness", "fig7": "Fig 7 group (subcortical)", "fig8": "Fig 8 UPDRS (subcortical)"}
 
 

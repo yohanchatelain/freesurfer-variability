@@ -741,8 +741,9 @@ def savefig(fig, name, dpi=200):
     fig.savefig(FIGURES / f"{name}.pdf", dpi=dpi, bbox_inches="tight")  # dpi of the rasterized parts
 
 
-def _grouped_boxes(ax, data, regions, groups, colors, horizontal=True, width=0.8, fontsize=7, showfliers=True):
-    """Box plots of data[group][region] (lists of values), grouped by region."""
+def _grouped_boxes(ax, data, regions, groups, colors, horizontal=True, width=0.8, fontsize=7, showfliers=True,
+                   flier_size=1.5):
+    """Box plots of data[group][region] (lists of values), grouped by region; outliers in the colour of the group."""
     n = len(groups)
     w = width / n
     for gi, g in enumerate(groups):
@@ -750,7 +751,8 @@ def _grouped_boxes(ax, data, regions, groups, colors, horizontal=True, width=0.8
         vals = [np.asarray(data[g][r], dtype=float) for r in regions]
         vals = [v[~np.isnan(v)] for v in vals]
         bp = ax.boxplot(vals, positions=pos, widths=w * 0.9, vert=not horizontal, patch_artist=True,
-                        showfliers=showfliers, flierprops=dict(markersize=1.5, alpha=0.4, markeredgewidth=0),
+                        showfliers=showfliers, flierprops=dict(markersize=flier_size, alpha=0.4, markeredgewidth=0,
+                                                               markerfacecolor=colors[g]),
                         medianprops=dict(color="black", linewidth=0.8), whiskerprops=dict(linewidth=0.6),
                         capprops=dict(linewidth=0.6), boxprops=dict(linewidth=0.6), manage_ticks=False)
         for b in bp["boxes"]:
@@ -765,14 +767,18 @@ def _grouped_boxes(ax, data, regions, groups, colors, horizontal=True, width=0.8
 
 
 def plot_variability(table, kind, hemi=None, pairs=PAIRS, versions=VERSIONS, ax=None, xlim=None, fontsize=7,
-                     showfliers=True, xscale="linear", marker_size=14, legend=True, box_width=0.8):
+                     showfliers=True, xscale="linear", marker_size=14, legend=True, box_width=0.8, regions=None,
+                     title=None, flier_size=1.5):
     """Between-version absolute differences (boxes, one colour per pair) vs between-subject SD (markers).
 
     kind="aseg" for subcortical volumes, or "vol"/"surf"/"ct" for the cortical atlas (set_atlas) with hemi="lh"/"rh"/"bi".
-    xlim="whiskers" fits the axis to the box whiskers and SD markers (outliers beyond are clipped); xscale="log" uses a
-    log axis. The defaults reproduce the figures of 02.
+    xlim="whiskers" fits the axis to the box whiskers and SD markers (outliers beyond are clipped; xlim=None shows
+    them all); flier_size is the outlier marker size; xscale="log" uses a log axis. `regions` restricts the plot
+    to a subset of the regions (in the given order) and `title` overrides the default title. The defaults reproduce
+    the figures of 02.
     """
     import matplotlib.pyplot as plt
+    custom_regions, custom_title = regions, title
     if kind == "aseg":
         regions = ASEG_PLOT_ORDER
         diff_col = lambda p, r: f"{prefix(p)}_diff_{r}"
@@ -785,6 +791,10 @@ def plot_variability(table, kind, hemi=None, pairs=PAIRS, versions=VERSIONS, ax=
         est_col = lambda v, r: f"{r}_{hemi}_{kind}_{v}"
         unit = MEASURE_UNITS[kind]
         title = f"{MEASURE_NAMES[kind]} ({hemi})"
+    if custom_regions is not None:
+        regions = list(custom_regions)
+    if custom_title is not None:
+        title = custom_title
     groups = [label(p) for p in pairs]
     skip = incomparable_labels(table) if kind == "aseg" and "FS8" in versions else set()
     # FS8 pairs of labels FS8 does not produce or defines differently: no box (the difference is the definition)
@@ -793,7 +803,7 @@ def plot_variability(table, kind, hemi=None, pairs=PAIRS, versions=VERSIONS, ax=
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 0.22 * len(regions) + 1.5))
     _grouped_boxes(ax, data, regions, groups, PAIR_COLORS, horizontal=True, width=box_width, fontsize=fontsize,
-                   showfliers=showfliers)
+                   showfliers=showfliers, flier_size=flier_size)
     y = np.arange(len(regions))
     sds = []
     for v in versions:
