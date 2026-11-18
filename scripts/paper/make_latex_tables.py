@@ -83,20 +83,40 @@ Pair & Measure & {head} \\
 """)
 
 
-def clinical(out, name, src, stat):
-    """Tables 3-4: ROI rows, (stat, p) per version, baseline and longitudinal panels."""
-    t = pd.read_csv(src, header=[0, 1], index_col=[0, 1], dtype=str)  # keep the p strings as written (0.010)
-    versions = list(dict.fromkeys(v for v, _ in t.columns))
+def p_cell(p, n_tests=fsvv.N_SUBCORTICAL, alpha=fsvv.ALPHA):
+    """Exact raw p with 2 significant digits (0.19, 0.084, 0.0034; below 0.001 as 7.5x10^-4), in bold when
+    significant after Bonferroni correction (p < alpha / n_tests)."""
+    if pd.isna(p):
+        return "n/a"
+    if p >= 0.001:
+        s = f"{p:#.2g}" if p < 0.995 else "0.99"  # '#': keep trailing zeros (0.0070, 0.010); no e-notation here
+    else:
+        m, e = f"{p:.1e}".split("e")
+        s = rf"{m}{{\times}}10^{{{int(e)}}}"
+    return rf"$\mathbf{{{s}}}$" if p < alpha / n_tests else rf"${s}$"
+
+
+def clinical(out, name, results, stat, rois=fsvv.CLINICAL_TABLE_ROIS, versions=fsvv.VERSIONS):
+    """Tables 3-4 (and S7): ROI rows, (stat, p) per version, baseline and longitudinal panels separated by a rule;
+    `results` is a results table of 03 (columns version, roi, time, stat, p), p exact and raw, in bold when
+    significant after Bonferroni correction (0.05/14)."""
     head = " & ".join(rf"\multicolumn{{2}}{{c}}{{{VERSION_NAMES[v]}}}" for v in versions)
     sub = " & ".join(rf"${stat}$ & $p$" for _ in versions)
     rules = "".join(rf"\cmidrule(lr){{{2 + 2 * i}-{3 + 2 * i}}}" for i in range(len(versions)))
+    d = results.set_index(["time", "roi", "version"])
     lines = []
-    for time, g in t.groupby(level=0, sort=False):
-        lines.append(rf"\multicolumn{{{1 + 2 * len(versions)}}}{{l}}{{\textit{{{time}}}}} \\")
-        for (_, roi), r in g.iterrows():
+    for k, (time, title) in enumerate([("base", "Baseline"), ("long", "Longitudinal")]):
+        if k:
+            lines.append(r"\midrule")
+        lines.append(rf"\multicolumn{{{1 + 2 * len(versions)}}}{{l}}{{\textit{{{title}}}}} \\")
+        for roi in rois:
             cells = []
             for v in versions:
-                cells += [num(float(r[(v, stat)]), "{:.3f}"), tex(r[(v, "p")])]
+                if (time, roi, v) in d.index:
+                    r = d.loc[(time, roi, v)]
+                    cells += [num(r[stat], "{:.3f}"), p_cell(r["p"])]
+                else:
+                    cells += ["", "n/a"]
             lines.append(" & ".join([tex(roi)] + cells) + r" \\")
     body = "\n".join(lines)
     write(out / f"{name}.tex", rf"""\begin{{tabular}}{{l{'rr' * len(versions)}}}
@@ -191,8 +211,8 @@ def main():
 
     table1(tab)
     stage1(tab)
-    clinical(tab, "table3", TABLES / "table3_ancova_subcortical.csv", "F")
-    clinical(tab, "table4", TABLES / "table4_corr_subcortical.csv", "r")
+    clinical(tab, "table3", pd.read_csv(fsvv.OUT / "clinical_ancova_hc_pdnonmci.csv"), "F")
+    clinical(tab, "table4", pd.read_csv(fsvv.OUT / "clinical_partial_corr_updrs.csv"), "r")
     clusters = fsvv.read_cluster_summaries()
     clusters_table(tab, "table5", cluster_frame(clusters, "corr"))
     clusters_table(tab, "table6", cluster_frame(clusters, "group"))
@@ -229,12 +249,7 @@ def main():
 
     for name, src, stat in [("tableS7a", "clinical_ancova_hc_pdnonmci_qc_covariates.csv", "F"),
                             ("tableS7b", "clinical_partial_corr_updrs_qc_covariates.csv", "r")]:
-        res = pd.read_csv(fsvv.OUT / src)
-        t = pd.concat({"Baseline": fsvv.clinical_table(res, stat, "base"),
-                       "Longitudinal": fsvv.clinical_table(res, stat, "long")}, names=["time"])
-        t.to_csv(data / f"{name}.csv")
-        clinical(tab, name, data / f"{name}.csv", stat)
-        (data / f"{name}.csv").unlink()  # in the PDF; the CSV was only the input
+        clinical(tab, name, pd.read_csv(fsvv.OUT / src), stat)
     qc_clusters = fsvv.read_cluster_summaries(root=fsvv.OUT / "glm_qc")
     clusters_table(tab, "tableS8a", cluster_frame(qc_clusters, "corr"))
     clusters_table(tab, "tableS8b", cluster_frame(qc_clusters, "group"))

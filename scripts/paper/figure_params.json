@@ -123,13 +123,30 @@
   "xscale": "linear"
  },
  "fig7": {
+  "bonferroni": true,
   "cmap": "cold_hot",
   "colorbar_font": 16,
   "cut_y": "10,-5,-20",
   "font": 20,
   "row_height": 4.0,
-  "style": "glass_lyrz",
+  "style": "surface3d",
+  "superior_anterior": "up",
   "threshold": 1.3,
+  "ventricles": false,
+  "vmax": 5.0,
+  "width": 24.0
+ },
+ "fig8": {
+  "bonferroni": true,
+  "cmap": "cold_hot",
+  "colorbar_font": 20,
+  "cut_y": "10,-5,-20",
+  "font": 20,
+  "row_height": 4.0,
+  "style": "surface3d",
+  "superior_anterior": "up",
+  "threshold": 1.3,
+  "ventricles": false,
   "vmax": 5.0,
   "width": 24.0
  }
