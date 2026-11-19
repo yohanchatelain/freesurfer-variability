@@ -660,11 +660,10 @@ a median absolute error of 7.5\% (FS5) to 8.6\% (FS6).}
 Re-running a version on the same input reproduced its measures exactly, with a few exceptions in FS8. For FS5, FS6
 and FS7, every aseg and Destrieux value of the 20 images (as written in the FreeSurfer stats files) was identical
 in the two replicas and in the original run, although the original runs were made on another cluster. For FS8, the two replicas were identical, and 16 of the 20 images were identical
-to the original run (99.9\% of all values); in the 4 others, a few values differed\note{size of the FS8
-differences: outputs/crosscluster\_differences.csv, rows rep1/rep2 vs paper, FS8}. On the same images, the median
-difference between versions was 1.4--3.5\% for thickness and 3.3--9.2\% for cortical volume, surface area and the
-subcortical volumes of FS5--7\note{FS8 subcortical pairs: rerun notebook 12 (labels FS8 does not produce now left
-out)}. FS6 did not complete one image in either replica: \texttt{mris\_fix\_topology} did not finish correcting a
+to the original run; in the 4 others, only two subcortical volumes differed, by at most 0.0005\% (5 of the 9,540
+values compared). The original FS8 runs were also made on Rorqual. On the same images, the median
+difference between versions was 1.4--3.5\% for thickness and 3.3--9.7\% for cortical volume, surface area and
+subcortical volumes (labels that FS8 does not produce or defines differently left out of the FS8 pairs). FS6 did not complete one image in either replica: \texttt{mris\_fix\_topology} did not finish correcting a
 very large left-hemisphere defect within 43~h, whereas the original FS6 run of the same input had completed.}
 \note{Check the original FS6 run of that image (log, run time, whether it was re-run) before submission.}
 
@@ -814,7 +813,7 @@ protocol. No manual subcortical reference was available in this dataset, so the 
 volumes, which carried the clinical results, remains untested.} \rev{The repeat runs show that the differences
 between versions reported here do not come from re-running the analyses or from the computing environment: with the
 same container and input, FS5--7 gave identical measures on two clusters, and FS8 differed from its original run
-in only a few values of 4 of the 20 images. Running each version in a fixed container therefore made its results
+only in two subcortical volumes of 4 of the 20 images, by at most 0.0005\%. Running each version in a fixed container therefore made its results
 reproducible across the clusters used here; this need not hold on hardware or operating systems with different
 numerical behaviour.}
 
