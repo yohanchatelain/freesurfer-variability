@@ -161,15 +161,16 @@ than with each other, we processed the 101 T1-weighted images of the Mindboggle-
 2012) with the four FreeSurfer versions, using the same containers and the same cross-sectional \texttt{recon-all}
 command as for PPMI. Mindboggle-101 provides manual labels of 31 cortical regions per hemisphere (DKT31 protocol)
 for each image. The FreeSurfer DKT parcellation (\texttt{aparc.DKTatlas+aseg}; \texttt{aparc.DKTatlas40+aseg} in
-FS5) was resampled to the native T1-weighted space (\texttt{mri\_label2vol}), and each version's accuracy was
-measured per region with the Sørensen--Dice coefficient and the relative volume error with respect to the manual
-label. Versions were compared region by region with paired Wilcoxon tests (Bonferroni correction, $\alpha =
-0.05/62$). The subcortical labels of Mindboggle-101 are themselves FreeSurfer segmentations and were not used as a
-reference.}
-\note{Mindboggle: scripts in scripts/exp2, tested on 2 images x 4 versions (completed); the full run of 101 x 4
-waits for the end of the cluster maintenance (Nov 3). Open decisions: (1) FreeSurfer's DKT classifier was trained
-on Mindboggle-101 subjects (Klein \& Tourville, 2012): report the held-out subjects separately; (2) a dataset with
-manual subcortical labels (R1); (3) test-retest data (OASIS/NKI). Results and Discussion text to add once run.}
+FS5) and DK parcellation (\texttt{aparc+aseg}) were resampled to the native T1-weighted space
+(\texttt{mri\_label2vol}, nearest neighbour), and each version's accuracy was measured for each of the 62 DKT31
+regions with the Sørensen--Dice coefficient and the relative volume error with respect to the manual label (DK
+regions without a DKT31 counterpart were not scored). Versions were compared with paired Wilcoxon signed-rank tests,
+on the mean Dice of each image over the 62 regions (6 version pairs $\times$ 2 parcellations, $\alpha = 0.05/12$)
+and region by region ($\alpha = 0.05/372$ per parcellation, 62 regions $\times$ 6 pairs). The DKT atlas of FS5
+(DKTatlas40) was built from 40 of the Mindboggle-101 images (Klein \& Tourville, 2012), so its Dice is partly
+in-sample; the DK parcellation, whose atlases were not built from Mindboggle-101, follows a different protocol from
+the manual labels, which lowers its Dice, but provides an independent check of the ranking of the versions. The
+subcortical labels of Mindboggle-101 are themselves FreeSurfer segmentations and were not used as a reference.}
 
 \subsection{Image acquisition and preprocessing}
 
@@ -629,6 +630,22 @@ added in FS7 and FS8 and the pars triangularis in FS8; the volume of the lingual
 gyrus (FS7) differed in one version each. No version found a difference in thickness, and no region correlated with
 UPDRS-III after correction ($\alpha = 0.05/34$).}
 
+\rev{\subsection{Accuracy against manual labels (Mindboggle-101)}
+
+All four versions processed the 101 Mindboggle-101 images. Agreement with the manual DKT31 labels decreased slightly
+but consistently from the oldest to the newest version (Figure~S7): the mean Dice per image was 0.838 (SD 0.023) in
+FS5, 0.829 (0.030) in FS6, 0.823 (0.029) in FS7 and 0.816 (0.029) in FS8 with the DKT parcellation, and 0.796,
+0.784, 0.780 and 0.774 with the DK parcellation. In every version pair, the newer version had a lower Dice than the
+older one ($p < 0.001$ for all 12 tests); FS8 was below FS5 in 100 of the 101 images (DKT) and in all 101 (DK),
+by 0.022 on average. Region by region, FS8 had a lower Dice than FS5 in 54 of the 62 regions with the DKT
+parcellation (50 with DK) and a higher one in none (2 with DK); FS7 and FS6 were the closest pair (18 regions lower
+and one higher with DKT, 13 lower with DK). The largest decreases from FS5 to FS8 were in the entorhinal ($-0.05$),
+pericalcarine ($-0.04$ to $-0.05$), caudal anterior cingulate and parahippocampal ($-0.04$) regions, while the pars
+triangularis (both hemispheres) and the right pars opercularis and pars orbitalis did not change (DKT). The decrease
+was found in every lobe and in every Mindboggle-101 sub-dataset with more than one image. Region volumes were
+slightly overestimated in every version (median relative error $+0.2$ to $+3.8$\% with the DKT parcellation), with
+a median absolute error of 7.5\% (FS5) to 8.6\% (FS6).}
+
 \section{Discussion}
 
 \note{Discussion: numbers updated for the revised sample; FS8 and image-quality paragraphs added (blue).}
@@ -763,8 +780,16 @@ more accurate. \rev{Moreover, the clinical consequences of the measurement diffe
 analyses where the group differences or correlations were close to the significance threshold: the group
 differences between PD-non-MCI and HC in subcortical volumes were significant in the bilateral thalamus in every
 version, and differed between versions only for structures with weaker effects. Whether these measurement differences change conclusions in PD studies with larger effects (e.g., later disease
-stages or PD with dementia) remains to be tested.} \rev{The comparison with the manual labels of Mindboggle-101 addresses this question for the
-cortical parcellation only, because no manual subcortical reference was available in that dataset.}
+stages or PD with dementia) remains to be tested.} \rev{The comparison with the manual labels of Mindboggle-101
+partly addresses the question of accuracy, for the cortical parcellation: newer versions were not closer to the
+manual labels, and the agreement decreased slightly from FS5 to FS8 (mean Dice 0.838 to 0.816). This decrease is
+small compared with the differences between images (SD of the mean Dice about 0.03) but systematic, and it was
+found with both the DKT and the DK parcellations, so it is not explained by the FS5 DKT atlas having been built from
+Mindboggle-101 images. It does not mean that the measures of newer versions are less valid: the manual labels follow
+one protocol, the atlases of FS6 and later were retrained on other images, and the regions where agreement
+decreased most (entorhinal, parahippocampal, pericalcarine) have boundaries that depend strongly on the labelling
+protocol. No manual subcortical reference was available in this dataset, so the accuracy of the subcortical
+volumes, which carried the clinical results, remains untested.}
 
 In conclusion, our results show that the variability across FreeSurfer versions impacts clinical results in the
 studied PD populations at both subcortical volumetric and vertex-wise levels. The results differed even though we

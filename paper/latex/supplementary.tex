@@ -18,6 +18,7 @@ Figure S3 & Hippocampus segmentation: between-subject vs between-version differe
 Figure S4 & Segmentation overlap (Sørensen--Dice) between FreeSurfer versions \\
 Figure S5 & \rev{Relative differences between versions in subcortical volumes, by structure type} \\
 Figure S6 & \rev{Relative differences between versions in cortical measures, by lobe} \\
+Figure S7 & \rev{Accuracy against the manual labels of Mindboggle-101} \\
 Table S1 & Differences between versions, all images \\
 Table S2 & Differences between versions, PD images \\
 Table S3 & Differences between versions, HC images \\
@@ -84,6 +85,15 @@ includes the extracerebral CSF) are left out of the FS8 pairs.}}
 lobe (Destrieux atlas, bilateral measures: mean of the two hemispheres for thickness and volume, sum for surface
 area; 830 images). For each image, the median of $|A - B|/B$ (\%) over the regions of the lobe; ``other'': insular
 and boundary regions.}}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth]{mindboggle_dice}
+\caption{\rev{Accuracy of the cortical parcellation of each FreeSurfer version against the manual DKT31 labels of
+Mindboggle-101 (101 images). Left and middle: Sørensen--Dice coefficient of each image (mean over the 62 DKT31
+regions) for the DKT and DK parcellations, resampled to the native T1-weighted space. Right: mean Dice per lobe, DKT
+parcellation. The DKT atlas of FS5 was built from 40 of the Mindboggle-101 images.}}\label{fig:S7}
 \end{figure}
 
 \clearpage
