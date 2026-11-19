@@ -12,7 +12,8 @@ Inputs are read from `../data`, which holds symlinks to the original files. Outp
 | `02_software_variability.ipynb` | measures, paired tests between versions, Dice of significant sets, PD vs HC, MRIQC, segmentation Dice, Figures 1–3 | ✓ |
 | `03_clinical.ipynb` | subcortical partial correlations and ANCOVA (Tables 2–3), vertex-wise clusters | ✓ |
 | `04_qpn_replication.ipynb` | QPN replication | needs `data/qpn` |
-| `freesurfer_variability_mindboggle.ipynb` | Mindboggle subject list (Exp 2, in progress) | ✓ |
+| `11_mindboggle.ipynb` | Mindboggle-101: Dice and volume of the DKT/DK labels of each version vs the manual DKT31 labels, paired version tests (Exp 2) | needs `scripts/exp2` runs |
+| `freesurfer_variability_mindboggle.ipynb` | Mindboggle subject list (early draft, superseded by `11_mindboggle`) | ✓ |
 | `scratch.ipynb` | FS8 processing-completeness checks | ✓ |
 | `legacy/` | previous notebooks (outputs cleared), kept for reference | — |
 

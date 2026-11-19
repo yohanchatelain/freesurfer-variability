@@ -19,6 +19,8 @@ esac
 sd=$work/$FS_VERSION
 out=$work/eval/$FS_VERSION
 mkdir -p "$out"
+lic_bind=()
+[ "$FS_VERSION" = FS5 ] && lic_bind=(-B "$sd/license.txt:/usr/local/freesurfer/license.txt")
 for s in $(tail -n +2 "$EXP2_DIR/subjects.csv" | cut -d, -f2); do
   m=$sd/$s/mri
   [ -f "$sd/$s/stats/aseg.stats" ] && [ ! -f "$sd/$s/scripts/recon-all.error" ] || { echo "skip $s (not finished)"; continue; }
@@ -31,7 +33,8 @@ for s in $(tail -n +2 "$EXP2_DIR/subjects.csv" | cut -d, -f2); do
     name=${seg%%:*}; file=$m/${seg#*:}.mgz
     [ -f "$out/$s.$name.nii.gz" ] && continue
     # FreeSurfer conformed space -> native space of the input T1w (rawavg), nearest neighbour
-    apptainer exec -B "$work" --env FS_LICENSE="$sd/license.txt" "$img" \
+    # FS5.3 ignores FS_LICENSE: also bind the license where it looks for it
+    apptainer exec -B "$work" ${lic_bind[@]+"${lic_bind[@]}"} --env FS_LICENSE="$sd/license.txt" "$img" \
       mri_label2vol --seg "$file" --temp "$m/rawavg.mgz" --o "$out/$s.$name.nii.gz" --regheader "$file" > /dev/null
   done
 done
