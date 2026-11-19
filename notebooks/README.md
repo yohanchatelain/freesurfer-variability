@@ -13,6 +13,7 @@ Inputs are read from `../data`, which holds symlinks to the original files. Outp
 | `03_clinical.ipynb` | subcortical partial correlations and ANCOVA (Tables 2–3), vertex-wise clusters | ✓ |
 | `04_qpn_replication.ipynb` | QPN replication | needs `data/qpn` |
 | `11_mindboggle.ipynb` | Mindboggle-101: Dice and volume of the DKT/DK labels of each version vs the manual DKT31 labels, paired version tests (Exp 2) | needs `scripts/exp2` runs |
+| `12_crosscluster.ipynb` | Repeat runs (2 replicas, current cluster) vs the paper's runs vs between-version differences on 20 images | needs `data/crosscluster` |
 | `freesurfer_variability_mindboggle.ipynb` | Mindboggle subject list (early draft, superseded by `11_mindboggle`) | ✓ |
 | `scratch.ipynb` | FS8 processing-completeness checks | ✓ |
 | `legacy/` | previous notebooks (outputs cleared), kept for reference | — |

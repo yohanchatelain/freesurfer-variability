@@ -172,6 +172,15 @@ in-sample; the DK parcellation, whose atlases were not built from Mindboggle-101
 the manual labels, which lowers its Dice, but provides an independent check of the ranking of the versions. The
 subcortical labels of Mindboggle-101 are themselves FreeSurfer segmentations and were not used as a reference.}
 
+\rev{\paragraph{Repeat runs and computing environment.} To separate the differences between versions from those
+caused by re-running the same version, 20 baseline images of the cohort (10 PD, 10 HC, drawn at random) were
+processed twice more with each version (replicas 1 and 2) on Rorqual, with the same containers and cross-sectional
+\texttt{recon-all} command, each version receiving the exact input of its original run
+(\texttt{mri/orig/001.mgz}). The original runs of FS5--7 were made on Narval, those of FS8 on Rorqual. For each
+version, the aseg volumes and the Destrieux volume, surface area and thickness of the two replicas and of the
+original run were compared with the absolute relative difference $|A - B|/B$, and with the differences between
+versions on the same 20 images.}
+
 \subsection{Image acquisition and preprocessing}
 
 T1-weighted MRI images were obtained from PPMI that uses standardized acquisition parameters: repetition time =
@@ -646,6 +655,19 @@ was found in every lobe and in every Mindboggle-101 sub-dataset with more than o
 slightly overestimated in every version (median relative error $+0.2$ to $+3.8$\% with the DKT parcellation), with
 a median absolute error of 7.5\% (FS5) to 8.6\% (FS6).}
 
+\rev{\subsection{Repeat runs and computing environment}
+
+Re-running a version on the same input reproduced its measures exactly, with a few exceptions in FS8. For FS5, FS6
+and FS7, every aseg and Destrieux value of the 20 images (as written in the FreeSurfer stats files) was identical
+in the two replicas and in the original run, although the original runs were made on another cluster. For FS8, the two replicas were identical, and 16 of the 20 images were identical
+to the original run (99.9\% of all values); in the 4 others, a few values differed\note{size of the FS8
+differences: outputs/crosscluster\_differences.csv, rows rep1/rep2 vs paper, FS8}. On the same images, the median
+difference between versions was 1.4--3.5\% for thickness and 3.3--9.2\% for cortical volume, surface area and the
+subcortical volumes of FS5--7\note{FS8 subcortical pairs: rerun notebook 12 (labels FS8 does not produce now left
+out)}. FS6 did not complete one image in either replica: \texttt{mris\_fix\_topology} did not finish correcting a
+very large left-hemisphere defect within 43~h, whereas the original FS6 run of the same input had completed.}
+\note{Check the original FS6 run of that image (log, run time, whether it was re-run) before submission.}
+
 \section{Discussion}
 
 \note{Discussion: numbers updated for the revised sample; FS8 and image-quality paragraphs added (blue).}
@@ -789,7 +811,12 @@ Mindboggle-101 images. It does not mean that the measures of newer versions are 
 one protocol, the atlases of FS6 and later were retrained on other images, and the regions where agreement
 decreased most (entorhinal, parahippocampal, pericalcarine) have boundaries that depend strongly on the labelling
 protocol. No manual subcortical reference was available in this dataset, so the accuracy of the subcortical
-volumes, which carried the clinical results, remains untested.}
+volumes, which carried the clinical results, remains untested.} \rev{The repeat runs show that the differences
+between versions reported here do not come from re-running the analyses or from the computing environment: with the
+same container and input, FS5--7 gave identical measures on two clusters, and FS8 differed from its original run
+in only a few values of 4 of the 20 images. Running each version in a fixed container therefore made its results
+reproducible across the clusters used here; this need not hold on hardware or operating systems with different
+numerical behaviour.}
 
 In conclusion, our results show that the variability across FreeSurfer versions impacts clinical results in the
 studied PD populations at both subcortical volumetric and vertex-wise levels. The results differed even though we
