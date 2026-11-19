@@ -663,9 +663,9 @@ in the two replicas and in the original run, although the original runs were mad
 to the original run; in the 4 others, only two subcortical volumes differed, by at most 0.0005\% (5 of the 9,540
 values compared). The original FS8 runs were also made on Rorqual. On the same images, the median
 difference between versions was 1.4--3.5\% for thickness and 3.3--9.7\% for cortical volume, surface area and
-subcortical volumes (labels that FS8 does not produce or defines differently left out of the FS8 pairs). FS6 did not complete one image in either replica: \texttt{mris\_fix\_topology} did not finish correcting a
-very large left-hemisphere defect within 43~h, whereas the original FS6 run of the same input had completed.}
-\note{Check the original FS6 run of that image (log, run time, whether it was re-run) before submission.}
+subcortical volumes (labels that FS8 does not produce or defines differently left out of the FS8 pairs). For one image, the two FS6 replicas were stopped after 43~h while \texttt{mris\_fix\_topology} was still correcting
+a very large left-hemisphere defect; this step had taken 66~h in the original run (73~h in total), so the image was
+left out of the FS6 comparisons.}
 
 \section{Discussion}
 

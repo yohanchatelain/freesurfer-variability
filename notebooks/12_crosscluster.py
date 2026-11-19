@@ -27,8 +27,9 @@
 # Measure of difference: absolute relative difference |A − B| / B (%), per image and measure. For each measure, the
 # median over images; then the distribution of these medians over measures.
 #
-# FS6 did not finish on one image in either replica (`mris_fix_topology` hung on a very large left-hemisphere defect;
-# cancelled after 43 h): that image is left out of every FS6 comparison.
+# FS6 did not finish one image in either replica within 43 h: `mris_fix_topology` was still correcting a very large
+# left-hemisphere defect (66 h for this step in the paper's run, 73 h in total). The image is left out of the FS6
+# comparisons.
 # Labels FS8 does not produce or defines differently (`fsvv.incomparable_labels`) are left out of the FS8 version pairs.
 #
 # Outputs (aggregate only): `outputs/crosscluster_*.csv`.
