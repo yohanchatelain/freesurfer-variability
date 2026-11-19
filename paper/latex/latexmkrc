@@ -1,0 +1,4 @@
+# Build PDFs with pdflatex (figures are .pdf/.png, which DVI mode cannot include).
+$pdf_mode = 1;
+# Only the real documents; preamble.tex and references.tex are \input fragments.
+@default_files = ('manuscript.tex', 'supplementary.tex', 'response.tex');

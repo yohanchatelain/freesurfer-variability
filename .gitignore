@@ -1,7 +1,16 @@
 # Data (symlinks to shared project storage, licenses, containers, large results)
 data/
 # Private paper material (manuscript + reviews)
-/paper/
+/paper/*
+# ...except the LaTeX sources and the aggregate figures they include (repo is public)
+!/paper/latex/
+/paper/latex/*
+!/paper/latex/*.tex
+!/paper/latex/latexmkrc
+!/paper/latex/tables/
+!/paper/latex/figures/
+# Response to reviewers quotes confidential review text: keep private
+/paper/latex/response.tex
 # Python / notebooks
 __pycache__/
 *.pyc
