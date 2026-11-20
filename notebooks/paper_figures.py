@@ -56,7 +56,7 @@ DEFAULTS = {
                  flier_size=3.0),
     "fig7": dict(style="glass_subcortical", width=9, row_height=2.0, font=12, colorbar_font=10, vmax=5.0, threshold=1.3,
                  cmap="cold_hot", cut_y="10,-5,-20", ventricles=True,
-                 superior_anterior="up", bonferroni=True),
+                 superior_anterior="up", bonferroni=True, view1="L lateral", view2="R medial", view3="superior"),
 }
 DEFAULTS.update({
     "fig1": dict(width=5.2, height=8, font=7, title_font=8, suptitle_font=9, legend_font=7, grid_lw=0.3, cross_size=6,
@@ -712,14 +712,18 @@ def _visible(tris, view, pixel=0.5, eps=1.0):
     return (depth >= front[flat] - eps).any(1)
 
 
-VIEWS_3D_FIG = [(("Left",), "lateral", "L lateral"), (("Left",), "medial", "L medial"),
-                (("Left", "Right"), "superior", "superior")]
+# panels of Figures 7-8 (surface3d), chosen per position by view1..view3: name -> (hemispheres drawn, view)
+VIEWS_3D_FIG = {"L lateral": (("Left",), "lateral"), "L medial": (("Left",), "medial"),
+                "R lateral": (("Right",), "lateral"), "R medial": (("Right",), "medial"),
+                "superior": (("Left", "Right"), "superior")}
 
 
 def draw_subcortical_3d(fig_id, width=16, row_height=1.6, font=12, colorbar_font=10, vmax=5.0, threshold=1.3,
-                        cmap="cold_hot", ventricles=True, superior_anterior="up", bonferroni=False):
+                        cmap="cold_hot", ventricles=True, superior_anterior="up", bonferroni=False,
+                        view1="L lateral", view2="R medial", view3="superior"):
     """Figures 7-8 on the 3D subcortical meshes: rows = versions, columns = baseline and rate of change, three views
-    each (left lateral, left medial, superior with both hemispheres; superior_anterior "up" or "left"), all at the
+    each (view1..view3, from left to right: a key of VIEWS_3D_FIG, e.g. "L lateral", "R medial", "superior" with both
+    hemispheres; superior_anterior "up" or "left"), all at the
     same scale; structures coloured by (signed) -log10(p), gray below the threshold. ventricles=False hides the
     lateral ventricles (drawn gray, for context: they are not among the 14 structures of Tables 2-3), which cover
     the caudate and thalamus."""
@@ -735,8 +739,9 @@ def draw_subcortical_3d(fig_id, width=16, row_height=1.6, font=12, colorbar_font
     res, signed = (d["anc"], False) if fig_id == "fig7" else (d["corr"], True)
     norm = matplotlib.colors.Normalize(-vmax, vmax)
     times = [("base", "Baseline"), ("long", "Rate of change")]
-    layouts = [_pair_layout(view, sides, skip) for sides, view, _ in VIEWS_3D_FIG]
-    ext = [_panel_extent(lay, view, superior_anterior)[:2] for lay, (_, view, _) in zip(layouts, VIEWS_3D_FIG)]
+    panels = [(*VIEWS_3D_FIG[name], name) for name in (view1, view2, view3)]
+    layouts = [_pair_layout(view, sides, skip) for sides, view, _ in panels]
+    ext = [_panel_extent(lay, view, superior_anterior)[:2] for lay, (_, view, _) in zip(layouts, panels)]
     H = max(h for _, h in ext) * 1.04  # common panel height (mm): one scale for every panel
     widths = [w * 1.04 for w, _ in ext]
     fig = plt.figure(figsize=(width, row_height * len(fsvv.VERSIONS) + 1.4))
@@ -751,7 +756,7 @@ def draw_subcortical_3d(fig_id, width=16, row_height=1.6, font=12, colorbar_font
             # only the structures of Tables 2-3 (and of the Bonferroni count) are coloured; the ventricles are context
             vals = {roi: -np.log10(max(p, 1e-300)) * s for roi, p, s in zip(r["roi"], r["p"], sign)
                     if np.isfinite(p) and roi in fsvv.CLINICAL_TABLE_ROIS}
-            for j, (lay, (_, view, name)) in enumerate(zip(layouts, VIEWS_3D_FIG)):
+            for j, (lay, (_, view, name)) in enumerate(zip(layouts, panels)):
                 cell = gs[i, 1 + t * len(widths) + j]
                 if vtk:
                     ax = fig.add_subplot(cell)
@@ -774,14 +779,14 @@ def draw_subcortical_3d(fig_id, width=16, row_height=1.6, font=12, colorbar_font
 
 def draw_subcortical(fig_id, style="glass_ortho", width=9, row_height=2.0, font=12, colorbar_font=10, vmax=5.0,
                      threshold=1.3, cmap="cold_hot", cut_y="10,-5,-20", ventricles=True, superior_anterior="up",
-                     bonferroni=False):
+                     bonferroni=False, view1="L lateral", view2="R medial", view3="superior"):
     """Figure 7 (ANCOVA HC vs PD-non-MCI) or 8 (correlation with UPDRS-III); style glass_subcortical (split
     view cropped on the deep gray matter) / glass_ortho / glass_xz / glass_lyrz / mni_slices / fsaverage_slices."""
     if style == "surface3d":
         return draw_subcortical_3d(fig_id, width=width, row_height=row_height, font=font,
                                    colorbar_font=colorbar_font, vmax=vmax, threshold=threshold, cmap=cmap,
                                    ventricles=ventricles, superior_anterior=superior_anterior,
-                                   bonferroni=bonferroni)
+                                   bonferroni=bonferroni, view1=view1, view2=view2, view3=view3)
     if bonferroni:
         threshold = BONFERRONI_THRESHOLD
     from nilearn import datasets, plotting

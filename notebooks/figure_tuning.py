@@ -42,6 +42,7 @@ CHOICES = {
     "ratio_cmap": ["RdBu_r", "PuOr_r", "coolwarm", "magma_r"],
     "cmap": ["cold_hot", "hot", "RdBu_r", "coolwarm", "viridis"],
     "legend_pos": pf.LEGEND_POSITIONS,
+    **{f"view{i}": list(pf.VIEWS_3D_FIG) for i in (1, 2, 3)},  # Figures 7-8 (surface3d): panel at each position
 }
 
 
