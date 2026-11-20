@@ -25,21 +25,26 @@ PAPER_NAMES = {"fig1": "fig1_pvalues_subcortical", "fig2": "fig2_pvalues_cortica
                "fig5": "variability_surf", "fig6": "variability_ct", "fig7": "fig_subcortical_group",
                "fig8": "fig_subcortical_corr", "fig9": "fig7_corr_base", "fig10": "fig8_corr_long",
                "fig11": "fig9_group_base", "fig12": "fig10_group_long",
-               "figS1": "estimates_subcortical", "figS2": "estimates_cortical", "figS4": "segmentation_dice",
+               "figS1a": "estimates_subcortical_part1", "figS1b": "estimates_subcortical_part2",
+               "figS2a": "estimates_cortical_vol", "figS2b": "estimates_cortical_surf", "figS2c": "estimates_cortical_ct",
+               "figS4": "segmentation_dice",
                "figS5": "variability_by_type_subcortical", "figS6": "variability_by_type_cortical"}
 # Tabs of the tuning notebooks (09: main paper, 10: supplement), in the order of the PDFs. Figure S3 (example
 # hippocampi) is a picture, not drawn here.
 MAIN_FIGURES = ["fig1", "fig2", "fig3a", "fig3b", "fig3", "fig4", "fig5", "fig6", "fig7", "fig8", "fig9", "fig10",
                 "fig11", "fig12"]
-SUPP_FIGURES = ["figS1", "figS2", "figS4", "figS5", "figS6"]
+SUPP_FIGURES = ["figS1a", "figS1b", "figS2a", "figS2b", "figS2c", "figS4", "figS5", "figS6"]
 TITLES = {"fig1": "Fig 1 p-values subcortical", "fig2": "Fig 2 p-values cortical", "fig3a": "Fig 3a subcortical",
           "fig3b": "Fig 3b subcortical", "fig3": "Fig 3 subcortical (full)", "fig4": "Fig 4 volume",
           "fig5": "Fig 5 area", "fig6": "Fig 6 thickness", "fig7": "Fig 7 group (subcortical)",
           "fig8": "Fig 8 UPDRS (subcortical)", "fig9": "Fig 9 UPDRS baseline (cortex)",
           "fig10": "Fig 10 UPDRS change (cortex)", "fig11": "Fig 11 group baseline (cortex)",
-          "fig12": "Fig 12 group change (cortex)", "figS1": "S1 estimates subcortical", "figS2": "S2 estimates cortical",
+          "fig12": "Fig 12 group change (cortex)", "figS1a": "S1a subcortical", "figS1b": "S1b subcortical", "figS2a": "S2a volume", "figS2b": "S2b area",
+          "figS2c": "S2c thickness",
           "figS4": "S4 segmentation Dice", "figS5": "S5 variability by type", "figS6": "S6 variability by lobe"}
-KIND_OF = {"fig4": "vol", "fig5": "surf", "fig6": "ct"}
+KIND_OF = {"fig4": "vol", "fig5": "surf", "fig6": "ct", "figS2a": "vol", "figS2b": "surf", "figS2c": "ct"}
+# drawn and saved in two parts (<name>_part1, <name>_part2; lobes of LOBE_PARTS) when lobe_split is set
+SPLIT_FIGURES = {"fig4", "fig5", "fig6", "figS2a", "figS2b", "figS2c"}
 DEFAULTS = {
     "fig2": dict(width=16, height=22, font=10, title_font=12, legend_font=10, grid_lw=0.3),
     "fig3": dict(layout="enigma", metric="ratio", width=12, height=16, font=10, title_font=13, legend_font=10,
@@ -63,16 +68,20 @@ DEFAULTS = {
 DEFAULTS.update({
     "fig1": dict(width=5.2, height=8, font=7, title_font=8, suptitle_font=9, legend_font=7, grid_lw=0.3, cross_size=6,
                  legend_cols=5),
-    "figS1": dict(width=12, height=4, font=7, title_font=10, legend_font=8, box_width=0.8, fliers=True,
-                  flier_size=1.5, yscale="linear", legend_cols=4),
-    "figS2": dict(width=18, height=24, font=7, title_font=10, legend_font=8, box_width=0.8, fliers=True,
-                  flier_size=1.5, yscale="linear", legend_cols=4),
+    # S1a/S1b as Figures 3a/3b, S2a-c as Figures 4-6 (horizontal boxes, one row per region), one box per version
+    "figS1a": dict(width=17, height=8, font=20, title_font=24, legend_font=20, fliers=False, flier_size=3.0,
+                   xscale="linear", xlim="whiskers", xmax=None, box_width=0.85, legend_cols=4),
+    "figS1b": dict(width=17, height=30, font=20, title_font=24, legend_font=20, fliers=False, flier_size=3.0,
+                   xscale="linear", xlim="whiskers", xmax=None, box_width=0.85, legend_cols=4),
+    "figS2a": dict(width=35, height=40, font=32, title_font=40, legend_font=32, fliers=False, flier_size=3.0,
+                   xscale="linear", xlim="whiskers", xmax=None, box_width=0.8, legend_cols=4, lobe_split=True,
+                   preview_part=1),
     "figS4": dict(width=14, height=16, font=7, title_font=10, legend_font=8, box_width=0.8, fliers=True,
                   flier_size=1.5, xmin=0.0, legend_cols=6),
-    "figS5": dict(width=15, height=6, font=8, title_font=10, legend_font=7, box_width=0.8, fliers=False,
-                  flier_size=1.5, marker_size=16, yscale="log", legend_cols=5),
-    "figS6": dict(width=15, height=4.5, font=8, title_font=10, legend_font=7, box_width=0.8, fliers=False,
-                  flier_size=1.5, yscale="linear", legend_cols=6),
+    "figS5": dict(width=17, height=20, font=20, title_font=24, legend_font=20, box_width=0.85, fliers=False,
+                  flier_size=3.0, marker_size=100, xscale="log", xlim="whiskers", legend_cols=5),
+    "figS6": dict(width=24, height=10, font=20, title_font=24, legend_font=20, box_width=0.85, fliers=False,
+                  flier_size=3.0, xscale="linear", legend_cols=6),
 })
 for _f in ("fig9", "fig10", "fig11", "fig12"):
     DEFAULTS[_f] = dict(width=10, row_height=1.9, font=10, title_font=10, colorbar_font=8, vmax=5.0, threshold=1.3,
@@ -81,6 +90,8 @@ for _f in ("fig9", "fig10", "fig11", "fig12"):
 DEFAULTS["fig5"] = dict(DEFAULTS["fig4"])
 DEFAULTS["fig6"] = dict(DEFAULTS["fig4"])
 DEFAULTS["fig8"] = dict(DEFAULTS["fig7"])
+DEFAULTS["figS2b"] = dict(DEFAULTS["figS2a"])
+DEFAULTS["figS2c"] = dict(DEFAULTS["figS2a"])
 # Position of the figure legend (see _place_legend), for every figure with a legend
 LEGEND_POSITIONS = ["below", "above", "right", "left", "inside upper right", "inside upper left",
                     "inside lower right", "inside lower left"]
@@ -106,7 +117,8 @@ def load_data():
     return _data
 
 
-SEED_FROM = {"fig8": "fig7", "fig10": "fig9", "fig11": "fig9", "fig12": "fig9"}  # a figure not saved yet starts from the saved settings of its companion
+SEED_FROM = {"fig8": "fig7", "fig10": "fig9", "fig11": "fig9", "fig12": "fig9",
+             "figS1a": "fig3a", "figS1b": "fig3b", "figS2a": "fig4", "figS2b": "fig5", "figS2c": "fig6"}  # a figure not saved yet starts from the saved settings of its companion
 
 
 def load_params():
@@ -116,12 +128,17 @@ def load_params():
     return {k: {**v, **{kk: vv for kk, vv in saved.get(k, {}).items() if kk in v}} for k, v in DEFAULTS.items()}
 
 
+def is_split(fig_id, params):
+    """True if the figure is drawn and saved in two parts (save_to_paper draws them itself)."""
+    return fig_id in SPLIT_FIGURES and bool(params.get("lobe_split"))
+
+
 def save_to_paper(fig_id, fig, params):
     """Write the figure under its paper name (PNG + PDF in outputs/figures) and record its settings.
 
-    Figures 4-6 with lobe_split: both parts are drawn and written (<name>_part1, <name>_part2); `fig` is ignored.
+    SPLIT_FIGURES with lobe_split: both parts are drawn and written (<name>_part1, <name>_part2); `fig` is ignored.
     """
-    if fig_id in KIND_OF and params.get("lobe_split"):
+    if is_split(fig_id, params):
         for part in (1, 2):
             f = draw(fig_id, **{**params, "preview_part": part})
             fsvv.savefig(f, f"{PAPER_NAMES[fig_id]}_part{part}")
@@ -1014,39 +1031,114 @@ def _legend_rect(n, cols, font, height):
     return int(np.ceil(n / cols)) * font * 1.8 / 72 / height
 
 
-def _estimates_panel(ax, kind, hemi, font, title_font, box_width, fliers, flier_size, yscale):
+# --------------------------------------------------------------------------- Figures S1-S2: estimates per version
+# Laid out as Figures 3 (S1a/S1b) and 4-6 (S2a-c): horizontal boxes, one row per region, one box per version.
+# (version, aseg label) not drawn. FS8 CSF includes the extracerebral CSF: not the same measure.
+ESTIMATES_HIDDEN = {("FS8", "CSF")}
+
+
+def _legend_rows(fig, handles, labels, font, cols, title=None):
+    """Legend below the figure; returns the height fraction to keep free for it (rows + title)."""
+    fig.legend(handles, labels, ncol=cols, fontsize=font, frameon=False, loc="lower center", bbox_to_anchor=(0.5, 0),
+               title=title, title_fontsize=font)
+    rows = int(np.ceil(len(labels) / cols)) + bool(title)
+    return rows * font * 1.8 / 72 / fig.get_figheight()
+
+
+def _version_boxes_legend(fig, font, cols):
+    return _legend_rows(fig, [plt.Rectangle((0, 0), 1, 1, color=fsvv.VERSION_COLORS[v]) for v in fsvv.VERSIONS],
+                        fsvv.VERSIONS, font, cols, title="boxes: estimates of each FreeSurfer version")
+
+
+def _whisker_range(arrays):
+    """(lowest lower whisker, highest upper whisker) of box plots of `arrays` (1.5 IQR rule)."""
+    lo, hi = np.inf, -np.inf
+    for v in arrays:
+        v = np.asarray(v, dtype=float)
+        v = v[~np.isnan(v)]
+        if len(v):
+            q1, q3 = np.percentile(v, [25, 75])
+            lo = min(lo, v[v >= q1 - 1.5 * (q3 - q1)].min())
+            hi = max(hi, v[v <= q3 + 1.5 * (q3 - q1)].max())
+    return lo, hi
+
+
+def _set_xrange(ax, arrays, xscale, xlim, xmax):
+    """xlim "whiskers": the whisker range of `arrays` (outliers beyond it are clipped), "auto": matplotlib's; xmax:
+    upper limit (overrides). Log scale: from the lowest 5th percentile of the positive values (lower whiskers reach
+    differences close to 0, which would stretch the axis over many decades)."""
+    if xlim == "whiskers":
+        lo, hi = _whisker_range(arrays)
+        if xscale == "log":
+            pos = [np.asarray(v, dtype=float)[np.asarray(v, dtype=float) > 0] for v in arrays]
+            lo = min((np.percentile(v, 5) for v in pos if len(v)), default=lo)
+        if np.isfinite(lo):
+            pad = 0.03 * (hi - lo)
+            ax.set_xlim(lo / 1.15 if xscale == "log" else lo - pad, hi * 1.15 if xscale == "log" else hi + pad)
+    if xmax:
+        ax.set_xlim(right=xmax)
+
+
+def draw_estimates_subcortical(part, width=17, height=8, font=20, title_font=24, legend_font=20, fliers=False,
+                               flier_size=3.0, xscale="linear", xlim="whiskers", xmax=None, box_width=0.85,
+                               legend_cols=4):
+    """Figure S1 (part 1 / 2: the structures of Figure 3a / 3b, plus the brainstem in part 1: its volume is as large
+    as the cerebellum's): subcortical volume estimates per version."""
     table = load_data()["table"]
-    if kind == "aseg":
-        regions, col, unit, title = fsvv.ASEG_PLOT_ORDER, (lambda v, r: f"{r}_{v}"), fsvv.MEASURE_UNITS["vol"], \
-            "Subcortical volumes"
-    else:
-        regions, col, unit = fsvv.CORTICAL_ROIS, (lambda v, r: f"{r}_{hemi}_{kind}_{v}"), fsvv.MEASURE_UNITS[kind]
-        title = f"{fsvv.MEASURE_NAMES[kind]} ({hemi})"
-    n = len(fsvv.VERSIONS)
-    w = box_width / n
-    for k, v in enumerate(fsvv.VERSIONS):
-        data = [table[col(v, r)].dropna().values for r in regions]
-        _boxes(ax, data, np.arange(len(regions)) + (k - (n - 1) / 2) * w, w * 0.9, fsvv.VERSION_COLORS[v], fliers,
-               flier_size)
-    ax.set_xticks(range(len(regions)))
-    ax.set_xticklabels(regions, rotation=90, fontsize=font)
-    ax.set_xlim(-0.6, len(regions) - 0.4)
-    ax.set_yscale(yscale)
-    ax.tick_params(axis="y", labelsize=font)
-    ax.set_ylabel(unit, fontsize=font)
+    large = _aseg_parts()[1][0] + ["Brain-Stem"]
+    regions = [r for r in fsvv.ASEG_PLOT_ORDER if (r in large) == (part == 1)]
+    title = f"Subcortical volumes ({'ab'[part - 1]})"
+    data = {v: {r: np.array([]) if (v, r) in ESTIMATES_HIDDEN else table[f"{r}_{v}"].values for r in regions}
+            for v in fsvv.VERSIONS}
+    fig, ax = plt.subplots(figsize=(width, height))
+    fsvv._grouped_boxes(ax, data, regions, fsvv.VERSIONS, fsvv.VERSION_COLORS, horizontal=True, width=box_width,
+                        fontsize=font, showfliers=fliers, flier_size=flier_size)
+    ax.invert_yaxis()
+    ax.set_xscale(xscale)
+    _set_xrange(ax, [x for d in data.values() for x in d.values()], xscale, xlim, xmax)
+    ax.tick_params(axis="x", labelsize=font)
+    ax.set_xlabel(f"Volume ({fsvv.MEASURE_UNITS['vol']})", fontsize=font + 1)
     ax.set_title(title, fontsize=title_font)
-    ax.grid(axis="y", linestyle=":", linewidth=0.5)
+    fig.tight_layout(rect=(0, _version_boxes_legend(fig, legend_font, legend_cols), 1, 1))
+    return fig
 
 
-def draw_estimates(fig_id, width=12, height=4, font=7, title_font=10, legend_font=8, box_width=0.8, fliers=True,
-                   flier_size=1.5, yscale="linear", legend_cols=4):
-    """Figures S1 (subcortical) and S2 (cortical, one panel per measure and hemisphere): estimates per version."""
-    panels = [("aseg", None)] if fig_id == "figS1" else [(k, h) for k in fsvv.CORTICAL_MEASURES for h in fsvv.HEMIS]
-    fig, axes = plt.subplots(len(panels), 1, figsize=(width, height), squeeze=False)
-    for ax, (kind, hemi) in zip(axes[:, 0], panels):
-        _estimates_panel(ax, kind, hemi, font, title_font, box_width, fliers, flier_size, yscale)
-    _version_legend(fig, legend_font, legend_cols)
-    fig.tight_layout(rect=(0, _legend_rect(4, legend_cols, legend_font, height), 1, 1))
+def draw_estimates_cortical(fig_id, width=35, height=40, font=32, title_font=40, legend_font=32, fliers=False,
+                            flier_size=3.0, xscale="linear", xlim="whiskers", xmax=None, box_width=0.8, legend_cols=4,
+                            lobe_split=True, preview_part=1):
+    """Figure S2a-c (volume, area, thickness): cortical estimates per version, regions grouped by lobe (one row of
+    panels per lobe), lh and rh as columns; lobe_split: only the lobes of LOBE_PARTS[preview_part]."""
+    kind = KIND_OF[fig_id]
+    table = load_data()["table"]
+    order, lobe_of, lobes = _lobe_order()
+    if lobe_split:
+        lobes = [l for l in lobes if l in LOBE_PARTS[int(preview_part)]]
+        order = [r for r in order if lobe_of[r] in lobes]
+    counts = [sum(lobe_of[r] == l for r in order) for l in lobes]
+    fig, axes = plt.subplots(len(lobes), len(fsvv.HEMIS), figsize=(width, height), sharex=True, squeeze=False,
+                             gridspec_kw={"height_ratios": counts})
+    arrays = []
+    for col, hemi in enumerate(fsvv.HEMIS):
+        for row, l in enumerate(lobes):
+            ax = axes[row][col]
+            regs = [r for r in order if lobe_of[r] == l]
+            data = {v: {r: table[f"{r}_{hemi}_{kind}_{v}"].values for r in regs} for v in fsvv.VERSIONS}
+            arrays += [x for d in data.values() for x in d.values()]
+            fsvv._grouped_boxes(ax, data, regs, fsvv.VERSIONS, fsvv.VERSION_COLORS, horizontal=True,
+                                width=box_width, fontsize=font, showfliers=fliers, flier_size=flier_size)
+            ax.invert_yaxis()
+            ax.set_xscale(xscale)
+            if col == 0:
+                ax.set_ylabel(l, fontsize=font + 1)
+            else:
+                ax.set_yticklabels([])
+            if row == 0:
+                ax.set_title(hemi, fontsize=title_font)
+    _set_xrange(axes[0][0], arrays, xscale, xlim, xmax)
+    for ax in axes[-1]:
+        ax.set_xlabel(f"{fsvv.MEASURE_NAMES[kind]} ({fsvv.MEASURE_UNITS[kind]})", fontsize=font + 1)
+        ax.tick_params(axis="x", labelsize=font)
+    fig.tight_layout(rect=(0, _version_boxes_legend(fig, legend_font, legend_cols), 1, 1), h_pad=0.3)
     return fig
 
 
@@ -1130,38 +1222,38 @@ def _by_type_subcortical():
     return rel_sub, cv_sub
 
 
-def draw_by_type_subcortical(width=15, height=6, font=8, title_font=10, legend_font=7, box_width=0.8, fliers=False,
-                             flier_size=1.5, marker_size=16, yscale="log", legend_cols=5):
+def draw_by_type_subcortical(width=17, height=20, font=20, title_font=24, legend_font=20, box_width=0.85,
+                             fliers=False, flier_size=3.0, marker_size=100, xscale="log", xlim="whiskers",
+                             legend_cols=5):
     """Figure S5: relative difference between versions (boxes per pair) and between-subject CV (markers) of the
-    bilateral subcortical structures, by type."""
+    bilateral subcortical structures; one row per structure, one panel per structure type (as Figures 4-6)."""
     rel_sub, cv_sub = _by_type_subcortical()
     pairs = [fsvv.label(p) for p in fsvv.PAIRS]
-    fig, axes = plt.subplots(1, len(TYPES), figsize=(width, height),
-                             gridspec_kw={"width_ratios": [len(s) for s in TYPES.values()]})
-    for ax, (ty, structs) in zip(axes, TYPES.items()):
-        w = box_width / len(pairs)
-        for j, pair in enumerate(pairs):
-            data = [rel_sub.loc[(rel_sub["structure"] == st) & (rel_sub["pair"] == pair), "rel_diff"].dropna().values
-                    for st in structs]
-            pos = np.arange(len(structs)) - box_width / 2 + w * (j + 0.5)
-            keep = [k for k, x in enumerate(data) if len(x)]
-            _boxes(ax, [data[k] for k in keep], pos[keep], w * 0.9, fsvv.PAIR_COLORS[pair], fliers, flier_size)
+    groups = {k: g["rel_diff"].dropna().values for k, g in rel_sub.groupby(["structure", "pair"])}
+    fig, axes = plt.subplots(len(TYPES), 1, figsize=(width, height), sharex=True, squeeze=False,
+                             gridspec_kw={"height_ratios": [len(s) for s in TYPES.values()]})
+    for ax, (ty, structs) in zip(axes[:, 0], TYPES.items()):
+        data = {p: {st: groups.get((st, p), np.array([])) for st in structs} for p in pairs}
+        fsvv._grouped_boxes(ax, data, structs, pairs, fsvv.PAIR_COLORS, horizontal=True, width=box_width,
+                            fontsize=font, showfliers=fliers, flier_size=flier_size)
+        ax.set_yticklabels([s.replace("_", " ") for s in structs], fontsize=font)
         for v in fsvv.VERSIONS:
             cv = cv_sub[(cv_sub["type"] == ty) & (cv_sub["version"] == v)].set_index("structure")["cv"]
-            x = [k for k, st in enumerate(structs) if st in cv]
-            ax.scatter(x, [cv[structs[k]] for k in x], marker=fsvv.VERSION_MARKERS[v], color="black", s=marker_size,
-                       zorder=5, label=f"between-subject CV {v}")
-        ax.set_xticks(range(len(structs)))
-        ax.set_xticklabels([s.replace("_", " ") for s in structs], rotation=45, ha="right", fontsize=font)
-        ax.set_xlim(-0.6, len(structs) - 0.4)
-        ax.set_yscale(yscale)
-        ax.tick_params(axis="y", labelsize=font)
-        ax.set_title(ty, fontsize=title_font)
-        ax.grid(axis="y", which="major", color="0.85", linewidth=0.5)
-    axes[0].set_ylabel("relative difference between versions, |A − B| / B (%)", fontsize=font + 1)
-    h, l = axes[0].get_legend_handles_labels()
-    _pair_legend(fig, legend_font, legend_cols, (h, l))
-    fig.tight_layout(rect=(0, _legend_rect(len(pairs) + len(h), legend_cols, legend_font, height), 1, 1))
+            y = [k for k, st in enumerate(structs) if st in cv]
+            ax.scatter([cv[structs[k]] for k in y], y, marker=fsvv.VERSION_MARKERS[v], color="black", s=marker_size,
+                       linewidths=0.8, zorder=5, label=f"CV {v}")
+        ax.invert_yaxis()
+        ax.set_xscale(xscale)
+        ax.set_ylabel(ty, fontsize=font + 1)
+    arrays = list(groups.values()) + [cv_sub["cv"].values]
+    _set_xrange(axes[-1, 0], arrays, xscale, xlim, None)
+    axes[-1, 0].set_xlabel("relative difference between versions, |A − B| / B (%)", fontsize=font + 1)
+    axes[-1, 0].tick_params(axis="x", labelsize=font)
+    h, l = axes[0, 0].get_legend_handles_labels()
+    boxes = [plt.Rectangle((0, 0), 1, 1, color=fsvv.PAIR_COLORS[p]) for p in pairs]
+    free = _legend_rows(fig, boxes + h, pairs + l, legend_font, legend_cols,
+                        title="boxes: relative difference between versions; markers: between-subject CV (SD/mean)")
+    fig.tight_layout(rect=(0, free, 1, 1), h_pad=0.3)
     return fig
 
 
@@ -1187,29 +1279,29 @@ def _by_lobe_cortical():
     return _data["by_lobe"]
 
 
-def draw_by_lobe_cortical(width=15, height=4.5, font=8, title_font=10, legend_font=7, box_width=0.8, fliers=False,
-                          flier_size=1.5, yscale="linear", legend_cols=6):
-    """Figure S6: relative difference between versions per lobe (median over the lobe's regions), bilateral."""
+def draw_by_lobe_cortical(width=24, height=10, font=20, title_font=24, legend_font=20, box_width=0.85,
+                          fliers=False, flier_size=3.0, xscale="linear", legend_cols=6):
+    """Figure S6: relative difference between versions per lobe (median over the lobe's regions), bilateral; one row
+    per lobe, one panel per measure."""
     rel, lobes = _by_lobe_cortical()
     pairs = [fsvv.label(p) for p in fsvv.PAIRS]
-    fig, axes = plt.subplots(1, len(fsvv.CORTICAL_MEASURES), figsize=(width, height))
-    for ax, kind in zip(axes, fsvv.CORTICAL_MEASURES):
-        d = rel[rel["kind"] == kind]
-        w = box_width / len(pairs)
-        for j, pair in enumerate(pairs):
-            data = [d.loc[(d["lobe"] == l) & (d["pair"] == pair), "rel_diff"].dropna().values for l in lobes]
-            _boxes(ax, data, np.arange(len(lobes)) - box_width / 2 + w * (j + 0.5), w * 0.9, fsvv.PAIR_COLORS[pair],
-                   fliers, flier_size)
-        ax.set_xticks(range(len(lobes)))
-        ax.set_xticklabels(lobes, fontsize=font)
-        ax.set_xlim(-0.6, len(lobes) - 0.4)
-        ax.set_yscale(yscale)
-        ax.tick_params(axis="y", labelsize=font)
+    groups = {k: g["rel_diff"].dropna().values for k, g in rel.groupby(["kind", "lobe", "pair"])}
+    fig, axes = plt.subplots(1, len(fsvv.CORTICAL_MEASURES), figsize=(width, height), sharey=True, squeeze=False)
+    for ax, kind in zip(axes[0], fsvv.CORTICAL_MEASURES):
+        data = {p: {l: groups.get((kind, l, p), np.array([])) for l in lobes} for p in pairs}
+        fsvv._grouped_boxes(ax, data, lobes, pairs, fsvv.PAIR_COLORS, horizontal=True, width=box_width,
+                            fontsize=font, showfliers=fliers, flier_size=flier_size)
+        ax.invert_yaxis()
+        ax.set_xscale(xscale)
+        ax.tick_params(axis="x", labelsize=font)
         ax.set_title(f"{fsvv.MEASURE_NAMES[kind]} (bilateral)", fontsize=title_font)
-        ax.grid(axis="y", color="0.85", linewidth=0.5)
-    axes[0].set_ylabel("relative difference between versions (%),\nmedian over the lobe's regions", fontsize=font + 1)
-    _pair_legend(fig, legend_font, legend_cols)
-    fig.tight_layout(rect=(0, _legend_rect(len(pairs), legend_cols, legend_font, height), 1, 1))
+        ax.set_xlabel("relative difference (%)", fontsize=font + 1)
+    for ax in axes[0][1:]:
+        ax.tick_params(axis="y", labelleft=False)
+    boxes = [plt.Rectangle((0, 0), 1, 1, color=fsvv.PAIR_COLORS[p]) for p in pairs]
+    free = _legend_rows(fig, boxes, pairs, legend_font, legend_cols,
+                        title="boxes: relative difference between versions, median over the regions of the lobe")
+    fig.tight_layout(rect=(0, free, 1, 1))
     return fig
 
 
@@ -1277,8 +1369,10 @@ def _draw(fig_id, **params):
         return draw_fig1(**params)
     if fig_id in GLM_FIGURES:
         return draw_glm(fig_id, **params)
-    if fig_id in ("figS1", "figS2"):
-        return draw_estimates(fig_id, **params)
+    if fig_id in ("figS1a", "figS1b"):
+        return draw_estimates_subcortical(1 if fig_id == "figS1a" else 2, **params)
+    if fig_id in ("figS2a", "figS2b", "figS2c"):
+        return draw_estimates_cortical(fig_id, **params)
     if fig_id == "figS4":
         return draw_seg_dice(**params)
     if fig_id == "figS5":

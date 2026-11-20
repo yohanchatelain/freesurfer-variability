@@ -105,7 +105,7 @@ def panel(fig_id, params):
     def on_save(_):
         status.value = "saving…"
         v = values()
-        split = fig_id in pf.KIND_OF and v.get("lobe_split")  # save_to_paper draws both parts itself
+        split = pf.is_split(fig_id, v)  # save_to_paper draws both parts itself
         fig = None if split else pf.draw(fig_id, **v)
         path = pf.save_to_paper(fig_id, fig, v)
         if fig is not None:
@@ -131,11 +131,11 @@ def panel(fig_id, params):
             return
         status.value = "building the paper…"
         pages, built = [], {}
-        for n, (doc, caption) in found:
+        for n, (doc, caption, k) in found:
             if doc not in built:
                 built[doc] = paper.build(doc)
             pdf, ok = built[doc]
-            page = paper.find_page(pdf, caption)
+            page = paper.find_page(pdf, caption, k)
             if page:
                 pages.append((f"{caption.rstrip(':')} — {doc}.pdf p. {page}", paper.render_page(pdf, page, PAGE_DPI)))
         show_pages(pages)

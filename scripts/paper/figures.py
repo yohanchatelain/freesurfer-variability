@@ -64,29 +64,36 @@ def save(_):
         if src.exists() and src.read_bytes() != dst.read_bytes():
             shutil.copy2(src, dst)
             copied.append(dst.name)
-    print("\n".join(f"updated {n}" for n in copied) or "all figures already up to date")
     new = sorted({p.name for p in OUTPUT_FIGURES.glob("*.pdf")} - {p.name for p in PAPER_FIGURES.glob("*.pdf")})
-    if new:
-        print(f"\nnot copied (not in paper/latex/figures; copy by hand if the LaTeX uses them): {', '.join(new)}")
+    added = [n for n in new if locate(n)]  # new figures that manuscript.tex or supplementary.tex include
+    for n in added:
+        shutil.copy2(OUTPUT_FIGURES / n, PAPER_FIGURES / n)
+    print("\n".join([f"updated {n}" for n in copied] + [f"added {n}" for n in added])
+          or "all figures already up to date")
+    unused = [n for n in new if n not in added]
+    if unused:
+        print(f"\nnot copied (not included by the LaTeX): {', '.join(unused)}")
 
 
 def _figure_number(name):
-    """(document, caption prefix) of the figure that includes the image `name` (counting \\begin{figure})."""
+    """(document, caption prefix, k) of the figure that includes the image `name` (counting \\begin{figure}): the
+    figure's caption is the k-th (from 0) of the PDF starting with that prefix (several "(continued)" parts)."""
     for doc, prefix in (("manuscript", ""), ("supplementary", "S")):
         tex = (LATEX / f"{doc}.tex").read_text()
-        n = 0
+        n = k = 0
         for env in re.findall(r"\\begin\{figure\*?\}(.*?)\\end\{figure\*?\}", tex, re.S):
             continued = "\\ContinuedFloat" in env
-            n += not continued
+            n, k = (n, k + 1) if continued else (n + 1, -1)
             if re.search(r"\\includegraphics(\[[^]]*\])?\{" + re.escape(name) + r"\}", env):
-                return doc, f"Figure {prefix}{n}:" + (" (continued)" if continued else "")
+                return doc, f"Figure {prefix}{n}:" + (" (continued)" if continued else ""), max(k, 0)
     return None
 
 
 def locate(fig):
-    """(document, caption prefix) of a figure number (7, S3) or image name (fig7_corr_base); None if not included."""
+    """(document, caption prefix, k) of a figure number (7, S3) or image name (fig7_corr_base): the figure's caption
+    is the k-th of the PDF starting with that prefix (see find_page); None if not included."""
     if re.fullmatch(r"S?\d+", fig, re.I):
-        return ("supplementary" if fig[0] in "sS" else "manuscript"), f"Figure {fig.upper()}:"
+        return ("supplementary" if fig[0] in "sS" else "manuscript"), f"Figure {fig.upper()}:", 0
     return _figure_number(Path(fig).stem)
 
 
@@ -116,11 +123,12 @@ def sources_stamp():
     return hash(tuple(sorted((str(f), f.stat().st_mtime_ns) for f in files)))
 
 
-def find_page(pdf, caption):
-    """1-based page of the PDF whose text has a line starting with `caption`, or None."""
+def find_page(pdf, caption, k=0):
+    """1-based page of the PDF with the k-th (from 0) line starting with `caption`, or None."""
     text = subprocess.run(["pdftotext", "-layout", pdf, "-"], capture_output=True, text=True).stdout
-    return next((i for i, p in enumerate(text.split("\f"), 1) if re.search(r"^\s*" + re.escape(caption), p, re.M)),
-                None)
+    pages = [i for i, p in enumerate(text.split("\f"), 1)
+             for _ in re.findall(r"^\s*" + re.escape(caption), p, re.M)]
+    return pages[k] if k < len(pages) else None
 
 
 def render_page(pdf, page, dpi=80):
@@ -130,14 +138,14 @@ def render_page(pdf, page, dpi=80):
 
 
 def show(args):
-    found = locate(args.figure) if args.figure else ("manuscript", None)
+    found = locate(args.figure) if args.figure else ("manuscript", None, 0)
     if found is None:
         sys.exit(f"{args.figure}: not included by manuscript.tex or supplementary.tex")
-    doc, caption = found
+    doc, caption, k = found
     pdf, ok = build(doc)
     if not ok:
         print(f"latexmk failed: see paper/latex/{doc}.log (opening the last built PDF)")
-    page = find_page(pdf, caption) if caption else None
+    page = find_page(pdf, caption, k) if caption else None
     if caption:
         print(f"{caption.rstrip(':')} on page {page}" if page else f"{caption.rstrip(':')} not found in {pdf.name}")
     cmd = (["evince", "-i", str(page), pdf] if page and shutil.which("evince") else ["xdg-open", pdf])

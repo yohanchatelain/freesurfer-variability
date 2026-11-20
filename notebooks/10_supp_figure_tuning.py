@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.19.6
 #   kernelspec:
 #     display_name: Python 3.11 (fsvv)
 #     language: python
@@ -26,13 +26,16 @@
 #
 # Figure S3 (example hippocampi) is a picture, not drawn here. Figure S4 (segmentation Dice) reads the per-image
 # Dice files of `fsvv.DICE_ROOTS` the first time (slow).
+#
 
 # %%
 # %matplotlib inline
 import figure_tuning as ft
 import paper_figures as pf
 
-pf.load_data()  # once (a few seconds)
+pf.load_data();  # once (a few seconds)
 
 # %%
 ft.show(pf.SUPP_FIGURES);
+
+# %%
