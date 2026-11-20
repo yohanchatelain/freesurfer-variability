@@ -373,7 +373,11 @@ def _meshes():
     """{structure name: (vertices, faces)} of fsaverage's subcortical meshes (make_subcortical_meshes.sh)."""
     if "meshes" not in _data:
         d = fsvv.OUT / "fsaverage" / "subcortical"
-        _data["meshes"] = {p.stem: nib.freesurfer.read_geometry(str(p)) for p in sorted(d.glob("*.surf"))}
+        paths = sorted(d.glob("*.surf"))
+        if not paths:
+            raise FileNotFoundError(f"no subcortical meshes (*.surf) in {d}: run scripts/paper/make_subcortical_meshes.sh "
+                                    "on the cluster, or copy outputs/fsaverage/subcortical from there")
+        _data["meshes"] = {p.stem: nib.freesurfer.read_geometry(str(p)) for p in paths}
     return _data["meshes"]
 
 
