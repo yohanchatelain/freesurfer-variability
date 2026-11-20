@@ -3,7 +3,8 @@
 
 One tab per figure: one control per setting of paper_figures.DEFAULTS[fig_id], **Draw** to redraw, **Save to paper**
 to write the figure under its paper name in outputs/figures and record the settings in figure_params.json,
-**Show in paper** to build the LaTeX and show the page(s) of the figure as saved, **Defaults** to reset the controls.
+**Show in paper** to build the LaTeX and show the page(s) of the figure (saving it first if the settings changed since
+the last save), **Defaults** to reset the controls.
 Draw and Show in paper reuse their last result when nothing changed (same settings; same LaTeX sources and figure files).
 """
 import sys
@@ -79,6 +80,8 @@ def panel(fig_id, params):
             v["xmax"] = v["xmax"] or None
         return v
 
+    saved = {"values": values()}  # settings of the figure in the paper: as loaded, then as last saved
+
     def on_draw(_=None):
         """Draw the preview; settings unchanged since the last Draw: show that preview again."""
         key = repr(sorted(values().items()))
@@ -96,19 +99,26 @@ def panel(fig_id, params):
 
     def on_save(_):
         status.value = "saving…"
-        fig = pf.draw(fig_id, **values())
-        path = pf.save_to_paper(fig_id, fig, values())
-        plt.close(fig)
+        v = values()
+        split = fig_id in pf.KIND_OF and v.get("lobe_split")  # save_to_paper draws both parts itself
+        fig = None if split else pf.draw(fig_id, **v)
+        path = pf.save_to_paper(fig_id, fig, v)
+        if fig is not None:
+            plt.close(fig)
+        saved["values"] = v
         status.value = f"saved <code>{path.name}</code> and its settings"
 
     def on_page(_):
-        """Build the paper with the saved figures and show the page(s) of this figure."""
+        """Save the figure if its settings changed, build the paper and show the page(s) of this figure."""
         name = pf.PAPER_NAMES[fig_id]
         names = [name] if paper.locate(name) else [f"{name}_part1", f"{name}_part2"]
         found = [(n, paper.locate(n)) for n in names if paper.locate(n)]
         if not found:
             status.value = f"<code>{name}</code> is not included in the paper"
             return
+        changed = values() != saved["values"]
+        if changed:  # settings changed since the last save: save first, as the paper shows the saved figure
+            on_save(None)
         stamp = (paper.sources_stamp(), tuple(found))
         if cache["page"][0] == stamp:  # no LaTeX source or figure changed since the last successful build
             show_pages(cache["page"][1])
@@ -128,7 +138,8 @@ def panel(fig_id, params):
         cache["page"] = (stamp, pages) if pages and not failed else (None, None)
         status.value = (f"latexmk failed for {', '.join(failed)} (see paper/latex/*.log); showing the last build. "
                         if failed else "") + ("" if pages else "figure page not found in the PDF") + \
-            ("" if failed or not pages else "paper page with the <b>saved</b> figure (press Save to paper first)")
+            ("" if failed or not pages else "paper page with the saved figure") + \
+            (" (settings changed: saved first)" if changed else "")
 
     def show_pages(pages):
         out.clear_output(wait=True)
