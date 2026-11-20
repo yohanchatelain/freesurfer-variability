@@ -4,12 +4,14 @@
 One tab per figure: one control per setting of paper_figures.DEFAULTS[fig_id], **Draw** to redraw, **Save to paper**
 to write the figure under its paper name in outputs/figures and record the settings in figure_params.json,
 **Show in paper** to build the LaTeX and show the page(s) of the figure as saved, **Defaults** to reset the controls.
+Draw and Show in paper reuse their last result when nothing changed (same settings; same LaTeX sources and figure files).
 """
 import sys
 
 import ipywidgets as w
 import matplotlib.pyplot as plt
-from IPython.display import display
+from IPython.core.pylabtools import print_figure
+from IPython.display import Image, display
 
 import paper_figures as pf
 
@@ -69,6 +71,7 @@ def panel(fig_id, params):
     reset_btn = w.Button(description="Defaults", icon="undo")
     status = w.HTML()
     out = w.Output()
+    cache = {"draw": (None, None), "page": (None, None)}  # (key, result) of the last Draw / Show in paper
 
     def values():
         v = {k: c.value for k, c in ctrls.items()}
@@ -77,14 +80,19 @@ def panel(fig_id, params):
         return v
 
     def on_draw(_=None):
-        out.clear_output(wait=True)
-        status.value = "drawing…"
-        with out:
+        """Draw the preview; settings unchanged since the last Draw: show that preview again."""
+        key = repr(sorted(values().items()))
+        cached = cache["draw"][0] == key
+        if not cached:
+            status.value = "drawing…"
             fig = pf.draw(fig_id, **values())
             fig.set_dpi(PREVIEW_DPI)
-            display(fig)
+            cache["draw"] = key, print_figure(fig, "png")
             plt.close(fig)
-        status.value = ""
+        out.clear_output(wait=True)
+        with out:
+            display(Image(data=cache["draw"][1], format="png"))
+        status.value = "settings unchanged: last preview" if cached else ""
 
     def on_save(_):
         status.value = "saving…"
@@ -101,6 +109,11 @@ def panel(fig_id, params):
         if not found:
             status.value = f"<code>{name}</code> is not included in the paper"
             return
+        stamp = (paper.sources_stamp(), tuple(found))
+        if cache["page"][0] == stamp:  # no LaTeX source or figure changed since the last successful build
+            show_pages(cache["page"][1])
+            status.value = "nothing changed since the last build: last page shown"
+            return
         status.value = "building the paper…"
         pages, built = [], {}
         for n, (doc, caption) in found:
@@ -110,14 +123,18 @@ def panel(fig_id, params):
             page = paper.find_page(pdf, caption)
             if page:
                 pages.append((f"{caption.rstrip(':')} — {doc}.pdf p. {page}", paper.render_page(pdf, page, PAGE_DPI)))
+        show_pages(pages)
+        failed = [d for d, (_, ok) in built.items() if not ok]
+        cache["page"] = (stamp, pages) if pages and not failed else (None, None)
+        status.value = (f"latexmk failed for {', '.join(failed)} (see paper/latex/*.log); showing the last build. "
+                        if failed else "") + ("" if pages else "figure page not found in the PDF") + \
+            ("" if failed or not pages else "paper page with the <b>saved</b> figure (press Save to paper first)")
+
+    def show_pages(pages):
         out.clear_output(wait=True)
         with out:
             for title, png in pages:
                 display(w.VBox([w.HTML(f"<b>{title}</b>"), w.Image(value=png, format="png", layout=w.Layout(width=PAGE_WIDTH))]))
-        failed = [d for d, (_, ok) in built.items() if not ok]
-        status.value = (f"latexmk failed for {', '.join(failed)} (see paper/latex/*.log); showing the last build. "
-                        if failed else "") + ("" if pages else "figure page not found in the PDF") + \
-            ("" if failed or not pages else "paper page with the <b>saved</b> figure (press Save to paper first)")
 
     def on_reset(_):
         for k, c in ctrls.items():

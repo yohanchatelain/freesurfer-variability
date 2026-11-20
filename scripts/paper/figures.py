@@ -103,6 +103,17 @@ def build(doc):
     return pdf, ok
 
 
+SOURCES = {".tex", ".bib", ".bst", ".cls", ".sty", ".pdf", ".png", ".jpg", ".jpeg", ".eps"}
+
+
+def sources_stamp():
+    """Fingerprint of the files a build reads (LaTeX sources, saved and tracked figures): it changes whenever one of
+    them is added, edited or removed, so an unchanged stamp means the last built PDF is still current."""
+    files = [f for f in [*LATEX.rglob("*"), *OUTPUT_FIGURES.glob("*")]
+             if f.is_file() and f.suffix.lower() in SOURCES and not (f.parent == LATEX and f.suffix == ".pdf")]
+    return hash(tuple(sorted((str(f), f.stat().st_mtime_ns) for f in files)))
+
+
 def find_page(pdf, caption):
     """1-based page of the PDF whose text has a line starting with `caption`, or None."""
     text = subprocess.run(["pdftotext", "-layout", pdf, "-"], capture_output=True, text=True).stdout
