@@ -89,9 +89,18 @@ def locate(fig):
 
 
 def build(doc):
-    """Build paper/latex/<doc>.tex with latexmk; returns (PDF path, True if the build succeeded)."""
-    ok = subprocess.run(["latexmk", "-quiet", f"{doc}.tex"], cwd=LATEX, capture_output=True).returncode == 0
-    return LATEX / f"{doc}.pdf", ok
+    """Build paper/latex/<doc>.tex with latexmk; returns (PDF path, True if the build succeeded).
+
+    latexmk only tracks the image files the last run read. A figure saved for the first time in outputs/figures
+    (searched before paper/latex/figures by \\graphicspath) is not one of them, so force a rerun (-g) whenever a
+    figure is newer than the PDF.
+    """
+    pdf = LATEX / f"{doc}.pdf"
+    built = pdf.stat().st_mtime if pdf.exists() else 0
+    figures = [*OUTPUT_FIGURES.glob("*.pdf"), *OUTPUT_FIGURES.glob("*.png"), *PAPER_FIGURES.glob("*")]
+    force = ["-g"] if any(f.stat().st_mtime > built for f in figures) else []
+    ok = subprocess.run(["latexmk", "-quiet", *force, f"{doc}.tex"], cwd=LATEX, capture_output=True).returncode == 0
+    return pdf, ok
 
 
 def find_page(pdf, caption):
