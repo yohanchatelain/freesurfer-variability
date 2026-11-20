@@ -78,6 +78,12 @@ for _f in ("fig9", "fig10", "fig11", "fig12"):
 DEFAULTS["fig5"] = dict(DEFAULTS["fig4"])
 DEFAULTS["fig6"] = dict(DEFAULTS["fig4"])
 DEFAULTS["fig8"] = dict(DEFAULTS["fig7"])
+# Position of the figure legend (see _place_legend), for every figure with a legend
+LEGEND_POSITIONS = ["below", "above", "right", "left", "inside upper right", "inside upper left",
+                    "inside lower right", "inside lower left"]
+for _p in DEFAULTS.values():
+    if "legend_font" in _p:
+        _p.update(legend_pos="below", legend_dx=0.0, legend_dy=0.0)
 
 P_LEVELS = [0.05, 0.001, 0.0001, 0.00001]
 P_COLORS = ["white", "#4daf4a", "#ffff33", "#ff7f00", "#e41a1c"]
@@ -844,7 +850,10 @@ def _draw_p_grid(ax, levels, absent, labels, title, font, title_font, grid_lw, c
     ax.set_xticks(range(len(fsvv.PAIRS)))
     ax.set_xticklabels([fsvv.label(q).replace("FS ", "") for q in fsvv.PAIRS], rotation=90, fontsize=font)
     ax.set_yticks(range(levels.shape[0]))
-    ax.set_yticklabels(labels if labels is not None else [], fontsize=font)
+    if labels is not None:
+        ax.set_yticklabels(labels, fontsize=font)
+    else:  # hide, not set_yticklabels([]): the panels share y, which would clear the labels of the first one too
+        ax.tick_params(axis="y", labelleft=False)
     ax.set_xticks(np.arange(-0.5, len(fsvv.PAIRS)), minor=True)
     ax.set_yticks(np.arange(-0.5, levels.shape[0]), minor=True)
     ax.grid(which="minor", color="0.8", linewidth=grid_lw)
@@ -1192,7 +1201,49 @@ def draw_by_lobe_cortical(width=15, height=4.5, font=8, title_font=10, legend_fo
     return fig
 
 
-def draw(fig_id, **params):
+def _place_legend(fig, pos, dx=0.0, dy=0.0):
+    """Move the figure legend(s) drawn below the figure to `pos` (LEGEND_POSITIONS), shifted by (dx, dy).
+
+    above / right / left: outside the axes (one column on the sides); the saved figure (bbox_inches="tight") grows to
+    include it. inside <corner>: in that corner of the first panel. The space kept below for the legend is given back
+    to the axes when the layout allows it (all axes on a grid).
+    dx, dy: shift, in fractions of the figure (below / above / right / left) or of the first panel (inside); > 0 moves
+    right / up.
+    """
+    if not fig.legends or (pos == "below" and not dx and not dy):
+        return fig
+    to_fig = fig.transFigure.inverted()
+    for old in list(fig.legends):  # rebuilt: an existing legend does not re-lay out its columns
+        texts, title = old.get_texts(), old.get_title()
+        side = pos not in ("above", "below")  # sides and inside: one column, title on two lines
+        kw = dict(ncol=1 if side else old._ncols, fontsize=texts[0].get_fontsize() if texts else None,
+                  frameon=old.get_frame_on(), title_fontsize=title.get_fontsize(),
+                  title=title.get_text().replace("; ", "\n") if side else title.get_text())
+        if pos.startswith("inside "):
+            # axes coordinates, not fig.axes[0].bbox: a Bbox anchor blows up under bbox_inches="tight" (out of memory)
+            kw.update(loc=pos.removeprefix("inside "), bbox_to_anchor=(dx, dy, 1, 1),
+                      bbox_transform=fig.axes[0].transAxes)
+        else:
+            if pos == "below":  # where the figure function put it
+                b = old.get_bbox_to_anchor().transformed(to_fig)
+                loc, anchor = old._loc, (b.x0, b.y0)
+            else:
+                loc, anchor = {"above": ("lower center", (0.5, 1.0)), "right": ("center left", (1.0, 0.5)),
+                               "left": ("center right", (0.0, 0.5))}[pos]
+            kw.update(loc=loc, bbox_to_anchor=(anchor[0] + dx, anchor[1] + dy), bbox_transform=fig.transFigure)
+        handles = old.legend_handles
+        old.remove()
+        fig.legend(handles, [t.get_text() for t in texts], **kw)
+    if pos != "below" and all(ax.get_subplotspec() is not None for ax in fig.axes):
+        fig.tight_layout()
+    return fig
+
+
+def draw(fig_id, legend_pos="below", legend_dx=0.0, legend_dy=0.0, **params):
+    return _place_legend(_draw(fig_id, **params), legend_pos, legend_dx, legend_dy)
+
+
+def _draw(fig_id, **params):
     if fig_id == "fig1":
         return draw_fig1(**params)
     if fig_id in GLM_FIGURES:

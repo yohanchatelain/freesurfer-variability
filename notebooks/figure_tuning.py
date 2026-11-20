@@ -3,15 +3,22 @@
 
 One tab per figure: one control per setting of paper_figures.DEFAULTS[fig_id], **Draw** to redraw, **Save to paper**
 to write the figure under its paper name in outputs/figures and record the settings in figure_params.json,
-**Defaults** to reset the controls.
+**Show in paper** to build the LaTeX and show the page(s) of the figure as saved, **Defaults** to reset the controls.
 """
+import sys
+
 import ipywidgets as w
 import matplotlib.pyplot as plt
 from IPython.display import display
 
 import paper_figures as pf
 
+sys.path.insert(0, str(pf.fsvv.ROOT / "scripts" / "paper"))
+import figures as paper  # noqa: E402  (build the LaTeX and find a figure's page)
+
 PREVIEW_DPI = 50
+PAGE_DPI = 200  # resolution of the paper page shown by "Show in paper" (high, so text stays sharp on HiDPI screens)
+PAGE_WIDTH = "850px"  # displayed width of that page
 
 # parameter: (min, max, step). Wide on purpose: the figure code accepts any value in these ranges.
 RANGES = {
@@ -21,6 +28,7 @@ RANGES = {
     "flier_size": (0.1, 30, 0.1), "cross_size": (2, 30, 1),
     "vmax": (1, 20, 0.5), "threshold": (0, 10, 0.05), "ratio_max": (1.1, 10, 0.1), "lower_height": (0.05, 0.9, 0.05),
     "xmin": (0, 0.99, 0.01), "px_per_mm": (2, 30, 1), "wspace": (-0.3, 0.5, 0.01), "hspace": (-0.3, 0.5, 0.01),
+    "legend_dx": (-0.5, 0.5, 0.005), "legend_dy": (-0.5, 0.5, 0.005),
 }
 CHOICES = {
     "xscale": ["linear", "log"], "yscale": ["linear", "log"], "xlim": ["whiskers", "auto"],
@@ -30,6 +38,7 @@ CHOICES = {
     "metric": ["ratio", "relative"], "preview_part": [1, 2], "superior_anterior": ["up", "left"],
     "ratio_cmap": ["RdBu_r", "PuOr_r", "coolwarm", "magma_r"],
     "cmap": ["cold_hot", "hot", "RdBu_r", "coolwarm", "viridis"],
+    "legend_pos": pf.LEGEND_POSITIONS,
 }
 
 
@@ -56,6 +65,7 @@ def panel(fig_id, params):
     ctrls = {k: control(k, v) for k, v in params[fig_id].items()}
     draw_btn = w.Button(description="Draw", button_style="primary", icon="refresh")
     save_btn = w.Button(description="Save to paper", button_style="success", icon="save")
+    page_btn = w.Button(description="Show in paper", icon="file-pdf-o")
     reset_btn = w.Button(description="Defaults", icon="undo")
     status = w.HTML()
     out = w.Output()
@@ -83,6 +93,32 @@ def panel(fig_id, params):
         plt.close(fig)
         status.value = f"saved <code>{path.name}</code> and its settings"
 
+    def on_page(_):
+        """Build the paper with the saved figures and show the page(s) of this figure."""
+        name = pf.PAPER_NAMES[fig_id]
+        names = [name] if paper.locate(name) else [f"{name}_part1", f"{name}_part2"]
+        found = [(n, paper.locate(n)) for n in names if paper.locate(n)]
+        if not found:
+            status.value = f"<code>{name}</code> is not included in the paper"
+            return
+        status.value = "building the paper…"
+        pages, built = [], {}
+        for n, (doc, caption) in found:
+            if doc not in built:
+                built[doc] = paper.build(doc)
+            pdf, ok = built[doc]
+            page = paper.find_page(pdf, caption)
+            if page:
+                pages.append((f"{caption.rstrip(':')} — {doc}.pdf p. {page}", paper.render_page(pdf, page, PAGE_DPI)))
+        out.clear_output(wait=True)
+        with out:
+            for title, png in pages:
+                display(w.VBox([w.HTML(f"<b>{title}</b>"), w.Image(value=png, format="png", layout=w.Layout(width=PAGE_WIDTH))]))
+        failed = [d for d, (_, ok) in built.items() if not ok]
+        status.value = (f"latexmk failed for {', '.join(failed)} (see paper/latex/*.log); showing the last build. "
+                        if failed else "") + ("" if pages else "figure page not found in the PDF") + \
+            ("" if failed or not pages else "paper page with the <b>saved</b> figure (press Save to paper first)")
+
     def on_reset(_):
         for k, c in ctrls.items():
             d = pf.DEFAULTS[fig_id][k]
@@ -90,9 +126,10 @@ def panel(fig_id, params):
 
     draw_btn.on_click(on_draw)
     save_btn.on_click(on_save)
+    page_btn.on_click(on_page)
     reset_btn.on_click(on_reset)
     grid = w.GridBox(list(ctrls.values()), layout=w.Layout(grid_template_columns="repeat(3, 370px)"))
-    return w.VBox([grid, w.HBox([draw_btn, save_btn, reset_btn, status]), out])
+    return w.VBox([grid, w.HBox([draw_btn, save_btn, page_btn, reset_btn, status]), out])
 
 
 def show(fig_ids):
