@@ -7,7 +7,10 @@ to write the figure under its paper name in outputs/figures and record the setti
 the last save), **Defaults** to reset the controls.
 Draw and Show in paper reuse their last result when nothing changed (same settings; same LaTeX sources and figure files).
 """
+import functools
+import html
 import sys
+import traceback
 
 import ipywidgets as w
 import matplotlib.pyplot as plt
@@ -32,6 +35,7 @@ RANGES = {
     "vmax": (1, 20, 0.5), "threshold": (0, 10, 0.05), "ratio_max": (1.1, 10, 0.1), "lower_height": (0.05, 0.9, 0.05),
     "xmin": (0, 0.99, 0.01), "px_per_mm": (2, 30, 1), "wspace": (-0.3, 0.5, 0.01), "hspace": (-0.3, 0.5, 0.01),
     "legend_dx": (-0.5, 0.5, 0.005), "legend_dy": (-0.5, 0.5, 0.005),
+    "colorbar_length": (0.2, 2.5, 0.05), "colorbar_thickness": (0.2, 8, 0.1),  # scale factors (1 = as drawn)
 }
 CHOICES = {
     "xscale": ["linear", "log"], "yscale": ["linear", "log"], "xlim": ["whiskers", "auto"],
@@ -153,10 +157,24 @@ def panel(fig_id, params):
             d = pf.DEFAULTS[fig_id][k]
             c.value = d if d is not None else 0
 
-    draw_btn.on_click(on_draw)
-    save_btn.on_click(on_save)
-    page_btn.on_click(on_page)
-    reset_btn.on_click(on_reset)
+    def guarded(fn):
+        """Errors raised in a button callback go to Jupyter's log, not the notebook (the status would stay at
+        "drawing…"): show them in the status and the output area instead."""
+        @functools.wraps(fn)
+        def run(*args):
+            try:
+                fn(*args)
+            except Exception as e:  # noqa: BLE001  (any error of the figure code)
+                status.value = f"<b style='color:#c00'>{type(e).__name__}</b>: {html.escape(str(e))}"
+                out.clear_output(wait=True)
+                with out:
+                    traceback.print_exc()
+        return run
+
+    draw_btn.on_click(guarded(on_draw))
+    save_btn.on_click(guarded(on_save))
+    page_btn.on_click(guarded(on_page))
+    reset_btn.on_click(guarded(on_reset))
     grid = w.GridBox(list(ctrls.values()), layout=w.Layout(grid_template_columns="repeat(3, 370px)"))
     return w.VBox([grid, w.HBox([draw_btn, save_btn, page_btn, reset_btn, status]), out])
 

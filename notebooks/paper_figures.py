@@ -44,7 +44,8 @@ DEFAULTS = {
     "fig2": dict(width=16, height=22, font=10, title_font=12, legend_font=10, grid_lw=0.3),
     "fig3": dict(layout="enigma", metric="ratio", width=12, height=16, font=10, title_font=13, legend_font=10,
                  fliers=False, xscale="linear", xlim="whiskers", xmax=None, marker_size=30, box_width=0.8,
-                 legend_cols=5, ratio_max=2.0, ratio_cmap="RdBu_r", lower_height=0.3, flier_size=3.0),
+                 legend_cols=5, ratio_max=2.0, ratio_cmap="RdBu_r", lower_height=0.3, flier_size=3.0,
+                 colorbar_length=1.0, colorbar_thickness=1.0),
     # Figure 3 split in two (see _aseg_parts), each part with its own settings
     "fig3a": dict(width=17, height=10, font=20, title_font=24, legend_font=20, fliers=False, flier_size=3.0,
                   xscale="linear", xlim="whiskers", xmax=None, marker_size=100, box_width=0.85, legend_cols=5),
@@ -53,10 +54,11 @@ DEFAULTS = {
     "fig4": dict(layout="ratio_heatmap", hemis="lh+rh", width=12, height=18, font=9, title_font=12, legend_font=9,
                  fliers=False, xscale="linear", xlim="whiskers", xmax=None, marker_size=30, box_width=0.8,
                  legend_cols=5, ratio_max=2.0, ratio_cmap="RdBu_r", lobe_split=True, preview_part=1,
-                 flier_size=3.0),
+                 flier_size=3.0, colorbar_length=1.0, colorbar_thickness=1.0),
     "fig7": dict(style="glass_subcortical", width=9, row_height=2.0, font=12, colorbar_font=10, vmax=5.0, threshold=1.3,
                  cmap="cold_hot", cut_y="10,-5,-20", ventricles=True,
-                 superior_anterior="up", bonferroni=True, view1="L lateral", view2="R medial", view3="superior"),
+                 superior_anterior="up", bonferroni=True, view1="L lateral", view2="R medial", view3="superior",
+                 colorbar_length=1.0, colorbar_thickness=1.0),
 }
 DEFAULTS.update({
     "fig1": dict(width=5.2, height=8, font=7, title_font=8, suptitle_font=9, legend_font=7, grid_lw=0.3, cross_size=6,
@@ -74,7 +76,8 @@ DEFAULTS.update({
 })
 for _f in ("fig9", "fig10", "fig11", "fig12"):
     DEFAULTS[_f] = dict(width=10, row_height=1.9, font=10, title_font=10, colorbar_font=8, vmax=5.0, threshold=1.3,
-                        cmap="cold_hot", title=True, wspace=0.0, hspace=0.0)
+                        cmap="cold_hot", title=True, wspace=0.0, hspace=0.0, colorbar_length=1.0,
+                        colorbar_thickness=1.0)
 DEFAULTS["fig5"] = dict(DEFAULTS["fig4"])
 DEFAULTS["fig6"] = dict(DEFAULTS["fig4"])
 DEFAULTS["fig8"] = dict(DEFAULTS["fig7"])
@@ -1248,8 +1251,25 @@ def _place_legend(fig, pos, dx=0.0, dy=0.0):
     return fig
 
 
-def draw(fig_id, legend_pos="below", legend_dx=0.0, legend_dy=0.0, **params):
-    return _place_legend(_draw(fig_id, **params), legend_pos, legend_dx, legend_dy)
+def _resize_colorbars(fig, length=1.0, thickness=1.0):
+    """Scale every colorbar of the figure about its centre: `length` along the bar, `thickness` across it."""
+    if length == 1 and thickness == 1:
+        return fig
+    for ax in fig.axes:
+        cb = getattr(ax, "_colorbar", None)
+        if cb is None:
+            continue
+        b = ax.get_position(original=True)
+        sx, sy = (length, thickness) if cb.orientation == "horizontal" else (thickness, length)
+        w, h = b.width * sx, b.height * sy
+        ax.set_position([b.x0 + (b.width - w) / 2, b.y0 + (b.height - h) / 2, w, h])
+    return fig
+
+
+def draw(fig_id, legend_pos="below", legend_dx=0.0, legend_dy=0.0, colorbar_length=1.0, colorbar_thickness=1.0,
+         **params):
+    fig = _place_legend(_draw(fig_id, **params), legend_pos, legend_dx, legend_dy)
+    return _resize_colorbars(fig, colorbar_length, colorbar_thickness)
 
 
 def _draw(fig_id, **params):

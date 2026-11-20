@@ -35,7 +35,9 @@ def sh(*cmd, **kw):
 
 
 def git(*args):
-    return subprocess.run(["git", *args], cwd=ROOT, check=True, capture_output=True, text=True).stdout
+    # errors="replace": `diff --text` also prints the binary figure PDFs, which are not valid UTF-8
+    return subprocess.run(["git", *args], cwd=ROOT, check=True, capture_output=True, text=True,
+                          errors="replace").stdout
 
 
 def install(_):
