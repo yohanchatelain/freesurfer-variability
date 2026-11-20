@@ -44,7 +44,7 @@ TITLES = {"fig1": "Fig 1 p-values subcortical", "fig2": "Fig 2 p-values cortical
           "figS4": "S4 segmentation Dice", "figS5": "S5 variability by type", "figS6": "S6 variability by lobe"}
 KIND_OF = {"fig4": "vol", "fig5": "surf", "fig6": "ct", "figS2a": "vol", "figS2b": "surf", "figS2c": "ct"}
 # drawn and saved in two parts (<name>_part1, <name>_part2; lobes of LOBE_PARTS) when lobe_split is set
-SPLIT_FIGURES = {"fig4", "fig5", "fig6", "figS2a", "figS2b", "figS2c"}
+SPLIT_FIGURES = {"fig4", "fig5", "fig6", "figS2a", "figS2b", "figS2c", "figS4"}
 DEFAULTS = {
     "fig2": dict(width=16, height=22, font=10, title_font=12, legend_font=10, grid_lw=0.3),
     "fig3": dict(layout="enigma", metric="ratio", width=12, height=16, font=10, title_font=13, legend_font=10,
@@ -76,8 +76,8 @@ DEFAULTS.update({
     "figS2a": dict(width=35, height=40, font=32, title_font=40, legend_font=32, fliers=False, flier_size=3.0,
                    xscale="linear", xlim="whiskers", xmax=None, box_width=0.8, legend_cols=4, lobe_split=True,
                    preview_part=1),
-    "figS4": dict(width=14, height=16, font=7, title_font=10, legend_font=8, box_width=0.8, fliers=True,
-                  flier_size=1.5, xmin=0.0, legend_cols=6),
+    "figS4": dict(width=35, height=40, font=32, title_font=40, legend_font=32, box_width=0.8, fliers=False,
+                  flier_size=3.0, xmin=0.0, legend_cols=6, lobe_split=True, preview_part=1),
     "figS5": dict(width=17, height=20, font=20, title_font=24, legend_font=20, box_width=0.85, fliers=False,
                   flier_size=3.0, marker_size=100, xscale="log", xlim="whiskers", legend_cols=5),
     "figS6": dict(width=24, height=10, font=20, title_font=24, legend_font=20, box_width=0.85, fliers=False,
@@ -1148,32 +1148,58 @@ def _dice_long():
     return _data["dice_long"]
 
 
-def draw_seg_dice(width=14, height=16, font=7, title_font=10, legend_font=8, box_width=0.8, fliers=True,
-                  flier_size=1.5, xmin=0.0, legend_cols=6):
-    """Figure S4: segmentation Dice between versions per region (boxes per version pair), one panel per hemisphere."""
+# Figure S4 parts: the lobes of LOBE_PARTS, the subcortical structures after the cortical regions of part 2
+DICE_PARTS = {1: LOBE_PARTS[1], 2: LOBE_PARTS[2] + ["subcortical"]}
+
+
+def _dice_order(groups):
+    """{group: regions} of the Dice rows present in both hemispheres' data: Destrieux regions by lobe, then the
+    subcortical structures (aseg order of Figure 3; labels without a hemisphere, e.g. midline, are not drawn)."""
+    order, lobe_of, lobes = _lobe_order()
+    out = {l: [r for r in order if lobe_of[r] == l] for l in lobes}
+    present = {r for h, _, r in groups if h in fsvv.HEMIS}
+    aseg = list(dict.fromkeys(r.removeprefix("Left-").removeprefix("Right-") for r in fsvv.ASEG_PLOT_ORDER))
+    sub = [r for r in aseg if r in present and r not in fsvv.CORTICAL_ROIS]
+    out["subcortical"] = sub + sorted(present - set(fsvv.CORTICAL_ROIS) - set(sub))
+    return out
+
+
+def draw_seg_dice(width=35, height=40, font=32, title_font=40, legend_font=32, box_width=0.8, fliers=False,
+                  flier_size=3.0, xmin=0.0, legend_cols=6, lobe_split=True, preview_part=1):
+    """Figure S4: segmentation Dice between versions (boxes per version pair), laid out as Figures 4-6: one row of
+    panels per lobe (Destrieux) and one for the subcortical structures, lh and rh as columns; lobe_split: only the
+    groups of DICE_PARTS[preview_part]."""
     d = _dice_long()
     pairs = [fsvv.label(p) for p in fsvv.PAIRS]
-    fig, axes = plt.subplots(1, len(fsvv.HEMIS), figsize=(width, height))
     if "dice_groups" not in _data:  # (hemi, comparison, roi) -> values, grouped once (filtering per box is slow)
         _data["dice_groups"] = {k: g.values for k, g in d.groupby(["hemi", "comparison", "roi"])["dice"]}
     groups = _data["dice_groups"]
-    for ax, hemi in zip(axes, fsvv.HEMIS):
-        regions = sorted({r for h, _, r in groups if h == hemi})
-        w = box_width / len(pairs)
-        for k, p in enumerate(pairs):
-            data = [groups.get((hemi, p, r), np.array([])) for r in regions]
-            _boxes(ax, data, np.arange(len(regions)) + (k - (len(pairs) - 1) / 2) * w, w * 0.9, fsvv.PAIR_COLORS[p],
-                   fliers, flier_size, vert=False)
-        ax.set_yticks(range(len(regions)))
-        ax.set_yticklabels(regions, fontsize=font)
-        ax.set_ylim(len(regions) - 0.4, -0.6)
-        ax.set_xlim(xmin, 1)
-        ax.tick_params(axis="x", labelsize=font)
+    rows = _dice_order(groups)
+    names = DICE_PARTS[int(preview_part)] if lobe_split else list(rows)
+    names = [g for g in names if rows[g]]
+    fig, axes = plt.subplots(len(names), len(fsvv.HEMIS), figsize=(width, height), sharex=True, squeeze=False,
+                             gridspec_kw={"height_ratios": [len(rows[g]) for g in names]})
+    for col, hemi in enumerate(fsvv.HEMIS):
+        for row, g in enumerate(names):
+            ax = axes[row][col]
+            data = {p: {r: groups.get((hemi, p, r), np.array([])) for r in rows[g]} for p in pairs}
+            fsvv._grouped_boxes(ax, data, rows[g], pairs, fsvv.PAIR_COLORS, horizontal=True, width=box_width,
+                                fontsize=font, showfliers=fliers, flier_size=flier_size)
+            ax.invert_yaxis()
+            if col == 0:
+                ax.set_ylabel(g, fontsize=font + 1)
+            else:
+                ax.set_yticklabels([])
+            if row == 0:
+                ax.set_title(hemi, fontsize=title_font)
+    axes[0][0].set_xlim(xmin, 1)
+    for ax in axes[-1]:
         ax.set_xlabel("Sørensen–Dice coefficient", fontsize=font + 1)
-        ax.set_title(f"Segmentation overlap between versions ({hemi})", fontsize=title_font)
-        ax.grid(axis="x", linestyle=":", linewidth=0.5)
-    _pair_legend(fig, legend_font, legend_cols)
-    fig.tight_layout(rect=(0, _legend_rect(len(pairs), legend_cols, legend_font, height), 1, 1))
+        ax.tick_params(axis="x", labelsize=font)
+    boxes = [plt.Rectangle((0, 0), 1, 1, color=fsvv.PAIR_COLORS[p]) for p in pairs]
+    free = _legend_rows(fig, boxes, pairs, legend_font, legend_cols,
+                        title="boxes: segmentation overlap between versions")
+    fig.tight_layout(rect=(0, free, 1, 1), h_pad=0.3)
     return fig
 
 
