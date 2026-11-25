@@ -1,0 +1,72 @@
+{
+    "suggested-resources": {
+        "ram": 16384,
+        "walltime-estimate": 1440,
+        "cpu-cores": 4
+    },
+    "schema-version": "0.5",
+
+    "name": "FreeSurfer-Recon-all-base_v8.2.0",
+    "tool-version": "v8.2.0",
+
+    "container-image": {
+        "index": "docker://",
+        "image": "freesurfer/freesurfer:8.2.0",
+        "type": "singularity"
+    },
+
+    "command-line": "export SUBJECTS_DIR=`pwd`; export FS_LICENSE=`pwd`/[LICENSE_FILE]; recon-all -base [OUTPUTDIR] -tp [TP1] -tp [TP2] -all",
+
+    "inputs": [
+        {
+            "id": "license",
+            "name": "License file",
+            "type": "File",
+            "value-key": "[LICENSE_FILE]",
+            "description": "Valid license file needed to run FreeSurfer.",
+            "optional": false
+        },
+        {
+            "id": "outputdir",
+            "name": "Base subject name",
+            "type": "String",
+            "value-key": "[OUTPUTDIR]",
+            "optional": false
+        },
+        {
+            "id": "tp1",
+            "name": "Timepoint 1",
+            "type": "String",
+            "value-key": "[TP1]",
+            "description": "First processed cross-sectional subject.",
+            "optional": false
+        },
+        {
+            "id": "tp2",
+            "name": "Timepoint 2",
+            "type": "String",
+            "value-key": "[TP2]",
+            "description": "Second processed cross-sectional subject.",
+            "optional": false
+        }
+    ],
+
+    "output-files": [
+        {
+            "id": "output",
+            "name": "Output",
+            "description": "Longitudinal base subject.",
+            "path-template": "[OUTPUTDIR]",
+            "optional": false
+        }
+    ],
+
+    "error-codes": [
+        {
+            "code": 1,
+            "description": "Crashed"
+        }
+    ],
+
+    "description": "Creates an unbiased longitudinal template from multiple FreeSurfer 8 cross-sectional reconstructions using recon-all -base."
+}

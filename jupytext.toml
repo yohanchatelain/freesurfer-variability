@@ -1,0 +1,4 @@
+# Pair every notebook with a light "percent" .py script (code + markdown, no outputs).
+# Agents and diffs should use the .py; Jupyter keeps both in sync on save.
+# After editing a .py outside Jupyter, run: jupytext --sync <file>.py
+formats = "ipynb,py:percent"

@@ -1,0 +1,41 @@
+{
+    "schema-version": "0.5",
+    "name": "FreeSurfer5-Recon-all-long",
+    "container-image": {
+        "index": "docker://",
+        "image": "ansokol/freesurfer_5.3",
+        "type": "singularity"
+    },
+    "tool-version": "v5.3",
+    "command-line": "export SUBJECTS_DIR=`pwd`; recon-all -long [TP] [BASE] -all",
+    "author": "Laboratory for Computational Neuroimaging ",
+    "error-codes": [
+        {
+            "description": "Crashed",
+            "code": 1
+        }
+    ],
+    "inputs": [
+        {
+            "name": "timepoint",
+            "id": "tp",
+            "optional": false,
+            "value-key": "[TP]",
+            "description": "input timepoint",
+            "type": "String"
+        },
+        {
+            "name": "base template",
+            "id": "base",
+            "optional": false,
+            "value-key": "[BASE]",
+            "description": "subject template",
+            "type": "String"
+        }
+    ],
+    "custom": {
+        "cbrain:author": "Andrzej Sokolowski <andrzej.sokolowski@concordia.ca>",
+        "cbrain:readonly-input-files": true
+    },
+    "description": "-long longitudinally process all timepoints with recon-all -long: (https://surfer.nmr.mgh.harvard.edu/fswiki/LongitudinalProcessing)."
+}

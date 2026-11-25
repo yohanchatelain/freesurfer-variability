@@ -1,13 +1,28 @@
-boutiques
-collections 
-imageio
-itertools 
-json
-kaleido
-livingpark_utils
-numpy 
-pandas 
+# Analysis
+numpy
+pandas
+scipy
+statsmodels
 pingouin
+python-dateutil
+
+# Neuroimaging and figures
+nibabel
+nilearn
+matplotlib
+seaborn
 plotly
+kaleido
+imageio
+pyvista>=0.49
+
+# Notebooks
+jupytext
+ipywidgets
+nbformat
+nbclient
+
+# Pipeline and data access
+boutiques
+livingpark_utils
 rich
-scipy.stats 

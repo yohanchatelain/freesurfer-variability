@@ -1,0 +1,843 @@
+\documentclass[11pt]{article}
+\input{preamble}
+% \revmarksfalse  % uncomment for the clean version (no colours, no notes)
+
+\title{The impact of FreeSurfer versions on structural neuroimaging analyses of Parkinson's disease}
+\author{\rev{Yohan Chatelain$^{1\dagger}$, Andrzej Sokołowski$^{1\dagger}$, Vinuyan Sivakolunthu$^{1}$},
+Nikhil Bhagwat$^{2}$,\\
+Dimitrios Kirbizakis$^{1}$, Mathieu Dugré$^{1}$, Jean-Baptiste Poline$^{2}$, Madeleine Sharp$^{2}$,\\
+Tristan Glatard$^{1*}$\\[1ex]
+\small $^{1}$Department of Computer Science and Software Engineering, Concordia University, Montreal, Canada\\
+\small $^{2}$Department of Neurology and Neurosurgery, McGill University, Montreal, Canada\\[1ex]
+\small \rev{$^{\dagger}$These authors contributed equally to this work.} $^{*}$Corresponding author.}
+\date{}
+
+\begin{document}
+\onehalfspacing
+\maketitle
+
+\begin{abstract}
+Image processing software impacts the quantification of brain measures, playing an important role in the search
+for clinical biomarkers. We investigated the impact of the variability between FreeSurfer releases on the
+estimation of structural brain measures in Parkinson's disease (PD). Structural brain scans from
+\rev{135 controls and 280 patients were analyzed with FreeSurfer versions 5.3, 6.0.1, 7.3.2, and 8.2.0, including
+longitudinal data from 135 controls and 138 patients}. First, we measured the differences in the estimation of
+volume, surface area, and cortical thickness between FreeSurfer versions. Second, we focused on the relationship
+between MRI-derived brain measures and group differences as well as disease severity clinical outcomes, which
+were evaluated both cross-sectionally and longitudinally. We found high software-induced variability in the
+estimation of all three structural measures, which impacted clinical outcomes. There were differences between
+software versions in group differences between patients and healthy controls in subcortical volume and
+vertex-wise cortical thickness. Software variability also impacted the estimated relationship between brain
+structure and disease severity in patients. \rev{FS8 was the version closest to FS7 for surface area and cortical
+thickness (51\% and 72\% of the regions differed), but agreed least with the other versions on subcortical
+volumes.} Hence, software variability not only relates to the estimation of
+structural measures, but it also impacts clinically-relevant MRI measures. Our study provides insight into the
+reproducibility of structural neuroimaging studies in PD populations.
+\end{abstract}
+
+\section{Introduction}
+
+Neuroscience relies on numerous computational methods to analyze neuroimaging data. In recent years, however, the
+reproducibility of neuroimaging studies has been challenged. Reproducibility is characterized by two features,
+namely ability to replicate findings using the same analyses, and generalizability of results obtained with
+various data and computational approaches (Ghosh et al., 2017). The extent of the reproducibility issue in
+neuroimaging was most saliently shown in fMRI analysis by Botvinik-Nezer et al. (2020) who analyzed results
+obtained from 70 independent research teams that analyzed the same fMRI data with different processing pipelines.
+Teams agreed only on four out of the nine a priori hypotheses with agreement levels ranging from 21\% to 37\%
+(Botvinik-Nezer et al., 2020). One of the main factors impacting the reproducibility of neuroimaging studies is
+software variability (Niso et al., 2022). Notably, Bowring et al. (2019) investigated the impact of different
+software (AFNI, FSL, and SPM) on fMRI results. Different software pipelines produced various activation regions
+with overlap often lower than 50\% measured with Sørensen--Dice coefficient scores, with differences in
+t-statistics reaching four. Aforementioned results highlight the challenges with reproducibility.
+
+Several studies have also focused on variability of structural MRI measures, showing that software toolbox
+selection impacts the estimation of brain volume (Gomez-Ramirez et al., 2022; Rane et al., 2017) and cortical
+thickness (Bhagwat et al., 2021; Masouleh et al., 2020). Gronenschild et al. (2012) investigated the impact of
+FreeSurfer version on anatomical volume and cortical thickness estimation. They tested the variability between
+three FreeSurfer versions (4.3.1, 4.5, and 5.0) and reported significant differences in the volume estimation of
+numerous brain regions, both cortical and subcortical. They also found differences in the estimation of cortical
+thickness. Haddad et al. (2023) investigated the compatibility (measured as intraclass correlation coefficients)
+of brain structure estimation between three FreeSurfer versions (5.3, 6.0, and 7.1). They reported variable
+compatibility of cortical thickness and surface area ranging from poor to excellent depending on the brain region.
+\rev{Versions 5.3 and 6.0 were more compatible with each other than version 7.1 was with version 5.3. Differences
+between version 7.1 and the earlier versions were
+largely found in the cingulate gyrus and insula regions for the cortical thickness.} Another study reported
+relatively low correlation (r = .39 -- .52) between cortical thickness measured by various software (FreeSurfer,
+CIVET, and ANTs) and higher (r = .83 -- .89) correlation between FreeSurfer versions (5.0, 5.3, and 6.0; Bhagwat
+et al., 2021). Finally, Gomez-Ramirez et al. (2022) reported significant differences in subcortical volumes
+estimation between FreeSurfer and FSL. Prior findings justify the need to further investigate differences between
+software versions.
+
+Though it is increasingly well-established that both within- and between-software differences result in brain
+structure measurement differences, surprisingly little research has been done to quantify the impact of these
+measurement differences on the relationships between brain structure and behavior. \rev{This is especially important} in
+the context of clinical neuroscience research where MRI-derived structural brain measures are often related to
+clinical outcomes such as neurological symptom severity or clinical disease progression. Neuroimaging has been
+proposed as a diagnostic and prognostic marker of neurodegenerative diseases. In patients with Parkinson's disease
+(PD), MRI-derived measures such as gray matter volume and cortical thickness has been shown to be associated with
+disease severity (Hanganu et al., 2014; Le et al., 2020; Sarasso et al., 2021), disease progression (Gaurav et
+al., 2021; Tessa et al., 2014), and to differentiate between various syndromes (Chougar et al., 2021). However,
+currently there are no established MRI measures for the diagnosis or tracking of Parkinson's disease, which may at
+least in part be due to the measurement variability and its impact on advancing our understanding of brain
+diseases.
+
+The goal of this study was to investigate the impact of software variability on (1) the estimation of structural
+MRI-derived measures, and (2) commonly measured associations between MRI-derived brain structure and PD clinical
+outcomes. To our knowledge, this is the first study that investigates the impact of software variability on
+structural MRI measures in PD. First, we compared results obtained from \rev{four major FreeSurfer releases (i.e.,
+5.3, 6.0.1, 7.3.2, and 8.2.0)}. We focused on the FreeSurfer toolbox as it is publicly available software commonly
+used in neuroimaging. With a single command, FreeSurfer preprocesses an image and outputs several metrics. We
+analyze gray matter volume, cortical thickness, and surface area since these measures are often used in clinical
+research (Mitchell et al., 2021). Based on the notion that software variability impacts the estimation of
+structural measures (Bhagwat et al., 2021; Gronenschild et al., 2012) we hypothesized that there would be
+differences between FreeSurfer versions in the estimation of cortical thickness, volume, and surface area in a
+sample of patients with PD and healthy older adults. Second, we investigated whether structural MRI measurement
+differences between software versions would impact the relationships between brain structure and standard
+clinical outcomes measured in patients with Parkinson's disease. Clinical research questions were derived from
+previous studies on MRI-derived biomarkers of Parkinson's disease (Hanganu et al., 2014; Mak et al., 2015; for
+review see Mitchell et al., 2021). More specifically, Hanganu et al. (2014) investigated the group differences
+between healthy controls, PD with mild cognitive impairment (MCI), and PD without MCI in the rate of change of
+cortical thickness over time. They also tested the longitudinal group differences in the change of subcortical
+volumes. The relationship between these structural changes and cognition was also investigated (Hanganu et al.,
+2014). Similarly, Mak et al. (2015) studied the baseline and longitudinal group differences in cortical thickness
+and subcortical volumes. The goal of our study is not to reproduce the aforementioned studies but to use previous
+research as case studies to investigate software variability. We hypothesized that the software version would
+impact the group differences between healthy controls and PD patients in subcortical volumes and cortical
+thickness (at baseline and longitudinally). We also hypothesized that software variability would impact the
+correlation between disease severity and subcortical volumes and cortical thickness in patients with PD (at
+baseline and longitudinally).
+
+\section{Methods}
+
+\subsection{Participants}
+
+\rev{Participants were selected from the Parkinson's Progression Markers Initiative (PPMI; \url{www.ppmi-info.org}).
+Inclusion criteria for PD patients included the primary diagnosis of PD, two T1-weighted scans, and
+lack of other neurological diagnosis. The criteria selected 447 participants (273 PD-non-MCI, 36 PD-MCI, and 138
+healthy controls, HC). Thirty-two of them were not analyzed: the images of 21 participants (14 PD-non-MCI, 7
+PD-MCI) were not available for download, 2 PD-non-MCI participants had only one visit available, FreeSurfer failed
+on at least one image in at least one version for 8 participants (4 PD-non-MCI, 1 PD-MCI, 3 HC), and the images of
+one PD-non-MCI participant failed visual quality control. The final cross-sectional sample was 280 PD patients (252
+PD-non-MCI and 28 PD-MCI) and 135 HC, with 830 images (both visits of every participant).}
+\rev{Out of the participants of this cross-sectional sample, 138 PD-non-MCI patients and 135 HC were selected
+for the clinical part of the analysis.} All subjects in this cohort had two study visits with T1-weighted images available, and patients with
+PD had Unified Parkinson's Disease Rating Scale (UPDRS) scores. \rev{Patients' (n = 138; 67.4\% male) age range
+was 39.2 -- 83.9 (M$_{age}$ = 61.6; SD = 9.3), mean years of education 16.0 $\pm$ 3.0; mean time difference
+between the visits 1.4 $\pm$ 0.7 years; mean UPDRS 23.8 $\pm$ 10.0 at baseline and 27.0 $\pm$ 11.7 at the follow
+up visit.} Patients with PD-MCI were excluded from the clinical analyses due to the potential confound of MCI on
+clinical measures such as disease severity. Additional cohort of \rev{201 PD patients (68 women and 133 men;
+M$_{age}$ = 65.47; SD$_{age}$ = 9.05) has been selected from the Quebec Parkinson Network (QPN) dataset (release
+\texttt{qpn-nc-r01}, one session per participant). The inclusion criteria were the diagnosis of PD and availability
+of a usable structural MRI scan (one patient, whose only T1-weighted scan had 6 slices, was excluded).} This sample was used as a replication
+cohort to test the replicability of the obtained results. Descriptive statistics for all cohorts are reported in
+Table~\ref{tab:1}. This study has been conducted in accordance with the Declaration of Helsinki and was exempt from
+Concordia University's Research Ethics Unit.
+
+\begin{table}[H]
+\centering\footnotesize\setlength{\tabcolsep}{3.5pt}
+\caption{Descriptive statistics \rev{of the participants analyzed}.}\label{tab:1}
+\input{tables/table1}
+\par\smallskip\parbox{\linewidth}{\footnotesize MCI, Mild Cognitive Impairment; UPDRS, Unified Parkinson's Disease
+Rating Scale; PD, Parkinson's disease. \rev{Cross-sectional: participants with at least one image analyzed
+(demographics at the first visit). Longitudinal: participants of the clinical analyses; the PD-non-MCI longitudinal
+sample is a subsample of the PD-non-MCI cross-sectional sample that had longitudinal data and disease severity
+scores available. Duration T2--T1: time between the two scans. Replication: PD patients of the QPN release used in
+the revision (age and sex only in the QPN data).}}
+\end{table}
+
+\rev{\paragraph{Accuracy against manual labels (Mindboggle-101).} To compare the versions with a reference rather
+than with each other, we processed the 101 T1-weighted images of the Mindboggle-101 dataset (Klein \& Tourville,
+2012) with the four FreeSurfer versions, using the same containers and the same cross-sectional \texttt{recon-all}
+command as for PPMI. Mindboggle-101 provides manual labels of 31 cortical regions per hemisphere (DKT31 protocol)
+for each image. The FreeSurfer DKT parcellation (\texttt{aparc.DKTatlas+aseg}; \texttt{aparc.DKTatlas40+aseg} in
+FS5) and DK parcellation (\texttt{aparc+aseg}) were resampled to the native T1-weighted space
+(\texttt{mri\_label2vol}, nearest neighbour), and each version's accuracy was measured for each of the 62 DKT31
+regions with the Sørensen--Dice coefficient and the relative volume error with respect to the manual label (DK
+regions without a DKT31 counterpart were not scored). Versions were compared with paired Wilcoxon signed-rank tests,
+on the mean Dice of each image over the 62 regions (6 version pairs $\times$ 2 parcellations, $\alpha = 0.05/12$)
+and region by region ($\alpha = 0.05/372$ per parcellation, 62 regions $\times$ 6 pairs). The DKT atlas of FS5
+(DKTatlas40) was built from 40 of the Mindboggle-101 images (Klein \& Tourville, 2012), so its Dice is partly
+in-sample; the DK parcellation, whose atlases were not built from Mindboggle-101, follows a different protocol from
+the manual labels, which lowers its Dice, but provides an independent check of the ranking of the versions. The
+subcortical labels of Mindboggle-101 are themselves FreeSurfer segmentations and were not used as a reference.}
+
+\subsection{Image acquisition and preprocessing}
+
+T1-weighted MRI images were obtained from PPMI that uses standardized acquisition parameters: repetition time =
+2300 ms, echo time = 2.98 ms, inversion time = 0.9 s, \rev{1 $\times$ 1 $\times$ 1 mm resolution}, number of slices = 192,
+field of view = 256 mm, and matrix size = 256 $\times$ 256. However, since PPMI is a multisite project, there may be
+slight differences in the sites' setup. T1-weighted MRI images were taken from QPN as a replication data with the
+following parameters: repetition time = 2300 ms, echo time = 2.98 ms, \rev{inversion time = 0.9 s, 1 $\times$ 1
+$\times$ 1 mm resolution}, number of slices = \rev{192}, field of view = \rev{256 mm}, and matrix size = 256 $\times$ 256.
+
+Brain images were processed using FreeSurfer 5.3, 6.0.1, 7.3.2 and 8.2.0 (referred to as FS5, FS6, FS7, FS8
+accordingly). FreeSurfer's recon-all function was used for cortical reconstruction. Volumes, cortical thickness,
+and surface area were extracted for each participant. The longitudinal preprocessing stream was used to analyze
+images in the analyses that involved clinical data (Reuter et al., 2012). The two timepoints were processed
+cross-sectionally with the default pipeline, an unbiased template from the two images was created, and data were
+processed longitudinally. Specifically, an unbiased within-subject template space and image (Reuter \& Fischl,
+2011) is created using robust, inverse consistent registration (Reuter et al., 2010). Analyses were performed on
+the Narval and Rorqual cluster\rev{s} hosted at Calcul Québec and part of Digital Research Alliance of Canada.
+Quality control of raw images was performed with MRIQC. Preprocessed images were visually
+inspected for quality by assessing brain parcellation and segmentation.
+
+\subsection{Statistical analyses}
+
+\subsubsection*{Stage I: structural MRI measurement differences between software versions}
+
+Statistical analyses were divided into two stages. In the first stage, we investigated the differences between
+FreeSurfer versions in estimating brain volumes, cortical thickness, and surface area in the PPMI cohort. Cortical
+and subcortical volumes as well as cortical surface areas and thickness were extracted from each T1w scan for all
+FreeSurfer versions using Destrieux 2009 atlas implemented in FreeSurfer. Paired t-test was used to test the
+differences between software versions (i.e., FS8 vs FS7, FS8 vs FS6, FS8 vs FS5, FS7 vs FS6, FS7 vs FS5, and FS6 vs
+FS5) across the entire cohort. Additional analyses were run separately for PD and HC groups. To test for
+differences in software variability between the two groups, a two-sample t-test was used \rev{on the relative
+differences between versions, with one image per participant (the first visit, on which MRIQC was run). As a
+sensitivity analysis, the same comparison was run with an OLS model adjusted for image quality (MRIQC total
+signal-to-noise ratio) and scanner manufacturer (two indicator variables, GE and Philips, with Siemens as the reference category).} \rev{Significance was assessed with a Bonferroni
+correction applied to the significance level: $\alpha = 0.05/187$ for volume (39 subcortical and 148 cortical
+regions), and $0.05/148$ for surface area and cortical thickness; tables report raw p-values. FS8 does not produce
+six of the subcortical labels of the earlier versions (left and right vessel and choroid plexus, 5th ventricle,
+optic chiasm), and it defines the CSF label differently: it includes the extracerebral CSF (median volume
+360 cm$^3$, against 1.1 cm$^3$ in FS7). We removed these seven labels from the FS8 comparisons (32 subcortical
+structures instead of 39; the Bonferroni threshold was kept at $0.05/187$).} \rev{All version comparisons and
+the clinical analyses (ANCOVA, partial correlation with UPDRS-III) were repeated with the Desikan--Killiany atlas,
+to test whether the conclusions depend on the atlas. The Desikan--Killiany analyses used bilateral measures (mean
+of the two hemispheres for thickness and volume, sum for surface area; 34 regions, $\alpha = 0.05/34$ for the
+clinical tests), so that each region is summarized by a single measure, which makes the regions most affected by
+the version easier to identify; the asymmetry of the differences between versions was analysed separately (Table
+S40).}
+
+Replication analyses were run with the QPN cohort. In line with the previous analyses, paired t-test was used to
+test the differences between FreeSurfer versions. The group differences between the PPMI PD group and the QPN
+cohort in software variability were also tested.
+
+\subsubsection*{Stage II: impact of software variability differences on the relationships between structural brain measurements and clinical outcomes}
+
+In the second stage of the analysis, volume, cortical thickness, and surface area were extracted for both
+timepoints in the longitudinal group. At the subcortical level we investigated the correlation between UPDRS score
+and subcortical volumes at baseline, and the existence of group differences (PD-non-MCI vs HC) in subcortical
+volumes. Longitudinal analyses were run to test for the correlation between the rate of change of UPDRS score and
+the rate of change in subcortical volumes, as well as for group differences in the rate of change of subcortical
+volumes. Rate of change of subcortical volumes was calculated as [(volume 2 $-$ volume 1) / volume 1] $\times$ 100.
+Partial correlation was used in the correlation analyses and ANCOVA was used in the group analyses. All analyses
+were controlled for age and sex, and longitudinal analyses were additionally controlled for the time difference
+between the two visits. \rev{Results were considered significant at $p < 0.05/14$ (Bonferroni correction for the
+14 subcortical structures). As a sensitivity analysis, the models were repeated with the image-quality and scanner
+covariates of Stage I.}
+
+At the vertex level, we examined the correlation between UPDRS scores and baseline cortical thickness, as well as
+any group differences in cortical thickness at baseline. We conducted additional longitudinal analyses to test the
+vertex-wise correlation between changes in UPDRS scores and the rate of change in cortical thickness, as well as
+any vertex-wise group differences in the rate of change in cortical thickness. Rate of change of the cortical
+thickness in the vertex-wise analyses was calculated as (thickness 2 $-$ thickness 1) / (time 2 $-$ time 1), that
+is mm/year. Age and sex were added as covariates in the vertex-wise analyses. Longitudinal analyses were
+additionally controlled for the time between the two visits. \rev{Clusters were formed at a vertex-wise threshold
+of $p < .05$ (\texttt{mri\_glmfit-sim}, cached simulation, two-sided) and retained at a cluster-wise $p < .05$,
+corrected for the two hemispheres.} \rev{The vertex-wise models were repeated with the image-quality and scanner
+covariates.}
+
+Additionally, to investigate the overlap between results yielded by FreeSurfer versions, \rev{we computed for
+each version pair the result agreement, the Sørensen--Dice index $2|A\cap B|/(|A|+|B|)$ of the sets $A$ and $B$ of
+regions with a significant result with each version (1 when both versions find the same regions, 0 when they share
+none).}
+
+\subsection{Code availability}
+
+We used publicly available software to conduct our study. \rev{Pandas v.3.0.0} was used to define cohorts from PPMI
+data files. FreeSurfer 5.3, 6.0.1, \rev{7.3.2, and 8.2.0} were used for image preprocessing and vertex-wise
+analyses. We used containerized versions of FreeSurfer managed by Boutiques \rev{v.0.5.33}
+(doi:10.5281/zenodo.3839009). The containerized FreeSurfer analyses were executed through the Slurm batch manager
+on the Narval \rev{and Rorqual clusters\footnote{\url{https://docs.alliancecan.ca/wiki/Narval/en} and
+\url{https://docs.alliancecan.ca/wiki/Rorqual/en}}} hosted at Calcul Québec and
+part of Digital Research Alliance of Canada. Pearson correlation and t-test analyses were run using \rev{SciPy
+v.1.17.0, and the OLS models with statsmodels v.0.14.6}. Partial correlation and ANCOVA analyses were run using
+\rev{Pingouin 0.7.0}. Sørensen--Dice coefficients were calculated using FreeSurfer's \texttt{mri\_seg\_overlap}
+function. Quality control was performed with MRIQC 22.0.1. \rev{Vertex-wise maps were drawn with Nilearn 0.14.0.}
+The code and results are publicly available at \url{https://github.com/LivingPark-MRI/freesurfer-variability} with a
+notebook detailing the analyses. Data used in the notebook were downloaded directly from the PPMI and cannot be
+shared publicly due to its Data Usage Agreements preventing republishing data. We developed a Python package
+(LivingPark utils, available at \url{https://github.com/LivingPark-MRI/livingpark-utils}) to download and manipulate
+PPMI data directly from the original PPMI database. As a result, our notebook can be re-executed by anyone with a
+PPMI account.
+
+\section{Results}
+
+\rev{PD patients and HC did not differ in age ($t = 0.86$, $p = .39$) or years of education ($t = -1.83$,
+$p = .07$), but differed in sex frequency ($\chi^2 = 13.51$, $p < .001$; 65.9\% and 75.0\% male in PD-non-MCI and
+PD-MCI, 47.4\% in HC). Clinical cohort of PD-non-MCI patients and HC group did not differ in age ($p = .96$),
+education ($p = .051$), or time difference between the two visits ($p = .13$), but differed in sex frequency
+($\chi^2 = 10.35$, $p = .001$; 67.4\% and 47.4\% male).} Descriptive statistics are reported in
+Table~\ref{tab:1}.
+
+\rev{Quality control of the first-visit images (280 PD, 135 HC) indicated that PD and HC differed in most quality
+metrics before correction for multiple comparisons: PD images had lower coefficient of joint variation ($p = .009$)
+and residual partial gray matter volume effect ($p = .015$), and higher contrast-to-noise ratio ($p = .006$),
+Mortamet's quality index 1 ($p = .003$), gray matter ($p = .032$) and total ($p < .001$) signal-to-noise ratio, and
+Dietrich's gray matter ($p = .009$) and total ($p = .011$) signal-to-noise ratio. They did not differ in
+foreground-to-background energy ratio ($p = .11$) or Mortamet's quality index 2 ($p = .38$). Quality metrics more
+often correlated with volume and cortical thickness than surface area; the coefficient of joint variation and the
+contrast-to-noise ratio correlated with the differences between versions in most regions. Correlation results for
+the main sample are reported in Tables S9--S18, for PD in PPMI in Tables S19--S28}, and for PD in QPN in Tables
+\rev{S29--S38 (supplied as data files and summarized in the Supplementary Material)}. Images from PD patients in the
+replication sample \rev{(201 images)} differed from PD patients in the main sample \rev{(280 first-visit images)} in
+all \rev{ten} quality metrics \rev{before correction for multiple comparisons ($p < .05$), and in eight of them after
+Bonferroni correction for the ten metrics ($p < .005$; Dietrich's gray matter and total signal-to-noise ratio,
+$p = .02$, were no longer significant)}. PD
+patients in QPN, compared to PPMI, had lower coefficient of joint variation, \rev{foreground-to-background energy
+ratio} and Mortamet's quality index 1, but higher contrast-to-noise ratio, residual partial gray matter volume
+effect, gray matter and total signal-to-noise ratio, Dietrich's gray matter and total signal-to-noise ratio, and
+Mortamet's quality index 2.
+
+\subsection{Stage I: structural MRI measurement differences between software versions}
+
+We tested differences between FS versions in the estimation of volume, surface area, and cortical thickness across
+the sample. Results, reported in \rev{Figures~\ref{fig:1} and~\ref{fig:2}}, indicate high software variability in the
+majority of the regions. Statistics are reported in Table~S1. Results are reported separately for PD and HC groups
+in Tables~S2 and~S3.
+
+\rev{There were significant differences between FS versions in the estimation of structural metrics based on
+FreeSurfer's Destrieux 2009 atlas (Table~\ref{tab:stage1}). Subcortical volumes differed in 27 (FS7 vs FS6) to all
+39 (FS7 vs FS5) of the 39 structures (32 compared in the FS8 pairs). Across all regions, the share of regions with a significant difference ranged
+from 77.5\% (FS7 vs FS6) to 88.2\% (FS6 vs FS5) for volume, from 50.7\% (FS8 vs FS7) to 87.2\% (FS8 vs FS5) for
+surface area, and from 72.3\% (FS8 vs FS7) to 93.2\% (FS6 vs FS5) for cortical thickness. FS8 and FS7 were the
+closest pair for surface area and thickness, and FS6 and FS5 differed the most in thickness. The same pattern was
+found in PD and HC images separately, with fewer significant regions in the smaller HC group (e.g., FS8 vs FS7,
+thickness: 62.8\% in PD, 41.2\% in HC). By lobe, the closeness of FS8 and FS7 in surface area came from the
+parietal (15.0\% of the regions) and frontal (39.6\%) lobes, whereas their thickness differed in all limbic regions.
+Occipital thickness differed in every region between FS7 and FS6, FS6 and FS5, and FS8 and FS6, whereas occipital
+volume differed in fewer than half of the regions between FS7 and FS6 (45.0\%) and between FS8 and FS6 (40.0\%).
+
+\rev{FS8 differed from FS7 less than any other pair for cortical surface area and thickness, and nearly as much as
+FS5 differed from FS6 and FS7 for subcortical structures. Surface area differed between FS8 and FS7 in 50.7\% of the
+regions and cortical thickness in 72.3\%, the lowest proportions of the six pairs; cortical volume did not follow
+this ranking (117 of the 148 regions differed between FS8 and FS7, against 111 between FS8 and FS6). Separately,
+the median Dice overlap of the cortical labels was highest for FS8 and FS7 (.88, against .80--.87 for the other
+pairs). Subcortical volumes, in contrast,
+differed in 30 of the 32 structures compared, and the mean Dice overlap of the 14 subcortical structures of
+Tables~\ref{tab:2} and~\ref{tab:3} was .84 for each pair that includes FS8, against .91 between FS7 and FS6 and .81
+between FS5 and FS6 or FS7 (Figure S4). The lowest overlaps between FS8 and FS7 were for the accumbens area
+(.70--.73) and the pallidum (.77--.79).}
+
+Relative to structure size (Figures S5 and S6; left and right merged), the differences between versions in the
+subcortical gray matter were mostly 2--10\%, smallest between FS7 and FS6, and below the between-subject coefficient
+of variation of the structures (10--22\%), except for the pallidum between FS5 and FS6 or FS7 (median 33--34\%), the
+accumbens area in the FS8 comparisons (24--31\%) and the central and mid-posterior corpus callosum in comparisons
+with FS5 or FS8. In the cortex, the median relative differences were 1--5\% for thickness, 2--8\% for surface area
+and 3--12\% for volume, largest in the limbic regions and smallest between FS8 and FS7. The differences between
+versions were not symmetric (Table S40). Depending on the version pair, the left and right relative differences
+differed in 5 (FS7 vs FS6) to 12 (FS7 vs FS5) of the 14 bilateral subcortical structures (12 in the FS8 pairs)
+and, out of the 74 Destrieux regions, in 11 (FS8 vs FS6) to 30 (FS6 vs FS5) regions for thickness, 23 (FS7 vs FS6
+and FS8 vs FS7) to 45 (FS7 vs FS5) for surface area and 19 (FS7 vs FS6 and FS8 vs FS7) to 47 (FS7 vs FS5) for
+volume, more often with the larger difference in the right hemisphere.}
+
+\begin{table}[H]
+\centering\small
+\caption{\rev{Percentage of regions with a significant difference between FreeSurfer versions (paired t-tests,
+Bonferroni-corrected; 830 images), over all regions, the subcortical structures, and the Destrieux regions of each
+lobe (both hemispheres).}}\label{tab:stage1}
+\input{tables/table2}
+\par\smallskip\parbox{0.95\linewidth}{\footnotesize \rev{All: 187 regions for volume (39 subcortical, 148
+cortical) and 148 for surface area and thickness. Lobes: 16 limbic, 48 frontal, 22 temporal, 20 occipital and 20
+parietal regions; the 22 regions not assigned to a lobe count only in All (per hemisphere: the five insular
+regions, the posterior ramus of the lateral fissure, the anterior and posterior transverse collateral sulci, the
+lateral and medial occipito-temporal sulci and the parieto-occipital sulcus). No lobe assignment is distributed
+with the Destrieux atlas, so each region was assigned to the lobe in which it lies, and regions lying across a lobe
+boundary were left unassigned. For the gyri that border two lobes, we followed FreeSurfer's lobe grouping of the
+Desikan--Killiany atlas (\texttt{mri\_annotation2label -{}-lobesStrict}) where an equivalent region exists: fusiform
+gyrus temporal, lingual gyrus occipital, paracentral lobule frontal and postcentral gyrus parietal. The cingulate
+and parahippocampal gyri form the limbic lobe (Broca's definition). The subcentral gyrus and sulci, which have no
+Desikan--Killiany equivalent, were counted as frontal, and the marginal branch of the cingulate sulcus, the
+posterior border of the paracentral lobule, as parietal. The assignment of every region is given in the analysis
+code. For the FS8 pairs, the volume percentages are computed over the 32 subcortical structures and 180 regions
+tested (the seven labels FS8 does not produce or defines differently are not tested; Methods); the Bonferroni
+divisor remains 187.}}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=0.55\textheight]{fig1_pvalues_subcortical}
+\caption{Differences between FreeSurfer versions in estimation of subcortical volume \rev{in the PPMI sample (830
+images, left) and in the PD patients of the QPN replication sample (right)}. Significant p-values reported in color, similar to the convention used in (Gronenschild et al., 2012).
+p $<$ .05 in green, p $<$ .001 in yellow, p $<$ .0001 in orange, p $<$ .00001 in red, \rev{after Bonferroni
+correction (thresholds divided by 187). $\times$, not tested: label that FS8 does not produce or defines differently (CSF; Methods).} Segmentation with aseg
+atlas implemented in FreeSurfer. Statistics are reported in Table S1 \rev{(PPMI) and S6 (QPN)}. PPMI, Parkinson's
+Progression Markers Initiative; QPN, Quebec Parkinson Network.}\label{fig:1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{fig2_pvalues_cortical}
+\caption{Differences between FreeSurfer versions in estimation of volume, surface area, and cortical thickness
+\rev{in the PPMI sample (830 images)}. Significant p-values reported in color. p $<$ .05 in green, p $<$ .001 in
+yellow, p $<$ .0001 in orange, p $<$ .00001 in red, \rev{after Bonferroni correction (thresholds divided by 187
+for volume and 148 for surface area and thickness)}. Parcellation with Destrieux atlas implemented in FreeSurfer.
+Statistics are reported in Table \rev{S1 (PPMI) and S6 (QPN)}. lh, left hemisphere; rh, right hemisphere. PPMI,
+Parkinson's Progression Markers Initiative; QPN, Quebec Parkinson Network.}\label{fig:2}
+\end{figure}
+
+Estimation of volumes, surface areas, and cortical thickness across the \rev{four} FreeSurfer versions are
+represented in Figures \rev{S1 and S2}. Between and within-subject variability is represented in
+\rev{Figures~\ref{fig:3}--\ref{fig:6}. The left hippocampus, for example, had higher between-subject variability
+than between-version variability (see Figure~\ref{fig:3}).} These variabilities were visualized in Figure \rev{S3}. The
+shapes and overlap between hippocampi in two different subjects seem to differ more than in the same subject
+varying in the software version. This suggests that the volume itself may not be the best metric to measure
+software variability. \rev{The overlap of the segmentations between versions is reported in Figure S4.}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{variability_subcortical_part1}
+\caption{Between-version (\rev{n = 6 version pairs}) and between-subject (\rev{n = 830 images}) subcortical
+volume variability\rev{, (a) lateral ventricles and cerebellum (white matter and cortex), (b) other structures,
+on separate axes because their variability is an order of magnitude larger}. Absolute difference between FreeSurfer
+versions represented as colored box plots, standard deviations \rev{of each version} represented as black
+markers. \rev{Outliers beyond the x-axis range are not shown.}}\label{fig:3}
+\end{figure}
+
+\begin{figure}[H]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{variability_subcortical_part2}
+\caption{\rev{(continued) (b) Other subcortical structures.}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{variability_vol_part1}
+\caption{Between-version (\rev{n = 6 version pairs}) and between-subject (\rev{n = 830 images}) cortical volume
+variability \rev{in the left (left panels) and right (right panels) hemispheres, (a) limbic, frontal and temporal
+regions, (b) occipital, parietal and other regions; outliers beyond the x-axis range are not shown}. Absolute difference between
+FreeSurfer versions represented as box plots, standard deviations \rev{of each version} represented as black
+markers.}\label{fig:4}
+\end{figure}
+
+\begin{figure}[H]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{variability_vol_part2}
+\caption{\rev{(continued) (b) Occipital, parietal and other regions.}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{variability_surf_part1}
+\caption{Between-version (\rev{n = 6 version pairs}) and between-subject (\rev{n = 830 images}) surface area
+variability \rev{in the left and right hemispheres, (a) limbic, frontal and temporal regions, (b) occipital,
+parietal and other regions; outliers beyond the x-axis range are not shown}. Absolute difference between FreeSurfer versions represented as
+box plots, standard deviations \rev{of each version} represented as black markers.}\label{fig:5}
+\end{figure}
+
+\begin{figure}[H]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{variability_surf_part2}
+\caption{\rev{(continued) (b) Occipital, parietal and other regions.}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{variability_ct_part1}
+\caption{Between-version (\rev{n = 6 version pairs}) and between-subject (\rev{n = 830 images}) cortical thickness
+variability \rev{in the left and right hemispheres, (a) limbic, frontal and temporal regions, (b) occipital,
+parietal and other regions; outliers beyond the x-axis range are not shown}. Absolute difference between FreeSurfer versions represented as
+box plots, standard deviations \rev{of each version} represented as black markers.}\label{fig:6}
+\end{figure}
+
+\begin{figure}[H]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{variability_ct_part2}
+\caption{\rev{(continued) (b) Occipital, parietal and other regions.}}
+\end{figure}
+
+\rev{There were no group differences (HC vs PD) in FreeSurfer variability after correction for multiple
+comparisons, except in one region: the left pericallosal sulcus thickness for FS8 vs FS6 ($t = -3.67$, $p < .001$;
+1 of 2,874 tests). Adjusted for image quality and scanner manufacturer, this difference remained, and two other
+tests became significant (thickness for FS6 vs FS5, volume for FS8 vs FS5; 3 tests). Results are
+reported in Tables S4 and S5.}
+
+\subsubsection*{Replication sample}
+
+\rev{We tested differences between FreeSurfer versions in the estimation of the structural metrics in the PD
+patients of the replication sample (201 images). As in the main sample, the versions differed in the majority of
+the regions (Table S6, Figure~\ref{fig:1}). FS7 and FS6 differed in volume in 59\% of the regions (49\% of the
+subcortical structures; 81\% in limbic, 67\% in frontal, 64\% in temporal, 40\% in occipital, 60\% in parietal
+regions), in surface area in 76\% and in thickness in 76\%. FS7 and FS5 differed in volume in 76\% (92\% of the
+subcortical structures), surface area in 71\% and thickness in 69\% (95\% in occipital regions). FS6 and FS5
+differed in volume in 73\% (82\% subcortical), surface area in 70\% and thickness in 86\% (100\% in occipital and
+parietal regions). The FS8 comparisons followed the main sample: FS8 and FS7 were the closest pair for surface area
+(31\%) and thickness (45\%; 94\% in limbic but 15\% in parietal regions), but differed in 91\% of the subcortical
+structures, while FS8 differed from FS6 in 63\% of the regions for volume, 67\% for surface area and 68\% for
+thickness, and from FS5 in 78\%, 72\% and 82\%.
+
+The regions that differed between versions were largely the same in both samples: the result agreement
+between the sets of significant regions of PPMI and QPN was .83--.94 for volume, .89--.91 for surface area and
+.83--.94 for thickness in the pairs of FS5--7 and FS8 vs FS5--6, and lowest for FS8 vs FS7 (.85, .69 and .72), the
+pair with the fewest differences. Software variability in QPN PD differed from that in PPMI PD in 97 of the 2,873
+tests (3\%), mostly for thickness (66 tests); in 84 of the 97, the differences between versions were smaller in
+QPN. Within QPN, PD patients and the 69 healthy controls of the release did not differ in software variability (1
+of 2,873 tests), as in PPMI.}
+
+\subsection{Stage II: impact of measurement differences on the relationships between structural brain measurements and clinical outcomes}
+
+\subsubsection*{Subcortical analyses}
+
+We tested the group differences (PD vs HC) in subcortical volumes at baseline. To quantify the impact of
+FreeSurfer versions on analysis outcomes, we calculated the \rev{result agreement} between (1) the set
+of regions with significant differences between PD and HC computed with FreeSurfer version A, and (2) the set of
+regions with significant differences between PD and HC computed with FreeSurfer version B. \rev{At baseline, FS5
+and FS6 found the same three significant structures (left and right thalamus, right hippocampus), a result agreement of 1. The agreement was .86 between FS7 and FS5 and between FS7 and FS6, .67 between FS8 and FS5 and between FS8 and FS6, and .57 between FS8 and FS7. The bilateral thalamus was
+significant in every version; FS7 additionally found the right pallidum, and FS8 the left accumbens area but not
+the right hippocampus.} Results are reported in \rev{Table~\ref{tab:2}}. \rev{In every version, the significant baseline differences (3 of the 14 structures in FS5, FS6 and FS8, 4 in FS7) were larger volumes in
+PD-non-MCI than in HC (sign of the age- and sex-adjusted group difference). This direction was unchanged with MRIQC
+total SNR and scanner manufacturer as covariates (Table S7). With FreeSurfer's estimated total intracranial volume
+(eTIV) as a covariate, the differences were reduced by about a third (FS7: left thalamus 316 to 210 mm$^3$), and the
+significant structures dropped to none in FS5 and FS8, one in FS6 (right hippocampus) and three in FS7 (right
+hippocampus, pallidum and thalamus), all larger in PD-non-MCI.}
+
+We investigated group differences (PD vs HC) in the rate of change of subcortical volumes. \rev{Only one structure
+was significant in FS5 (right caudate) and in FS8 (left caudate), and none in FS6 and FS7, so the result agreement
+was zero for the five pairs that include FS5 or FS8, and undefined for FS6 and FS7, which agreed in finding no
+significant structure.} Results are reported in
+\rev{Table~\ref{tab:2}}. Software variability has a substantial impact on both baseline and longitudinal analysis, even
+though the lack of significance in the longitudinal analysis would deserve additional studies. \rev{With the
+image-quality and scanner covariates, the significant structures were the same except in FS5 at baseline (bilateral
+thalamus only; Table S7).}
+
+\begin{table}[H]
+\centering\small
+\caption{Group differences (\rev{PD-non-MCI vs HC}) in subcortical volumes at baseline and longitudinal group
+differences in the rate of change in subcortical volumes.}\label{tab:2}
+\input{tables/table3}
+\par\smallskip\parbox{\linewidth}{\footnotesize \rev{ANCOVA (age and sex; longitudinal: also time between the
+visits) was used to test differences between PD-non-MCI (n = 138) and HC (n = 135). Raw p-values, exact; in bold:
+significant after Bonferroni correction ($p < 0.05/14 = 0.0036$).}}
+\end{table}
+
+We investigated correlation between UPDRS score and subcortical volumes at baseline. \rev{The correlation between
+the right putamen volume and the UPDRS score was significant after Bonferroni correction in FS6 only ($r = -.25$,
+$p = .003$); it was close to the threshold in FS7 ($r = -.25$, $p = .004$) and FS5 ($r = -.22$, $p = .010$) and
+weaker in FS8 ($r = -.20$, $p = .017$).} Results are reported in Table~\ref{tab:3}.
+
+We investigated correlation between the change in UPDRS score and the rate of change of subcortical volumes. No
+result remained significant after Bonferroni correction. Results are reported in Table~\ref{tab:3}. \rev{With the
+image-quality and scanner covariates, the baseline right putamen correlation was no longer significant in FS6, and
+the longitudinal correlation with the right caudate became significant in FS6 (Table S7).}
+
+\begin{table}[H]
+\centering\small
+\caption{Correlation between the UPDRS score and subcortical volumes at baseline, and longitudinal correlation
+between the change in UPDRS score and the rate of change in subcortical volumes.}\label{tab:3}
+\input{tables/table4}
+\par\smallskip\parbox{\linewidth}{\footnotesize Partial correlation \rev{(age and sex; longitudinal: also time
+between the visits) in PD-non-MCI patients (n = 138)} was used to test the correlations. \rev{Raw p-values, exact;
+in bold: significant after Bonferroni correction ($p < 0.05/14 = 0.0036$).}}
+\end{table}
+
+\rev{Figures~\ref{fig:subgroup} and~\ref{fig:subcorr} show the results of Tables~\ref{tab:2} and~\ref{tab:3} in the
+brain, with the colour scale of the vertex-wise maps.}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{fig_subcortical_group}
+\caption{\rev{Group differences (HC vs PD-non-MCI) in subcortical volumes at baseline and in their rate of change
+(ANCOVA, Table~\ref{tab:2}), one row per FreeSurfer version, on the subcortical structures of fsaverage. Colour: p-value of each structure, signed by the direction of the age- and sex-adjusted group difference (red: larger in HC; blue: larger in PD-non-MCI); coloured: significant after Bonferroni correction (uncorrected $p < 0.05/14 = 0.0036$, the entries in bold in Table~\ref{tab:2}); gray: not significant after correction. Unthresholded map: Figure S8.}}\label{fig:subgroup}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{fig_subcortical_corr}
+\caption{\rev{Partial correlation between UPDRS-III and subcortical volumes at baseline, and between the change in
+UPDRS-III and the rate of change in volume (Table~\ref{tab:3}), one row per FreeSurfer version. Colour: p-value of each structure, signed by the correlation (red: positive; blue: negative); coloured: significant after Bonferroni correction (uncorrected $p < 0.05/14 = 0.0036$, the entries in bold in Table~\ref{tab:3}); gray: not significant after correction. Unthresholded map: Figure S9.}}\label{fig:subcorr}
+\end{figure}
+
+\subsubsection*{Vertex-wise analyses}
+
+\paragraph{Correlation analyses}
+We found significant vertex-wise correlations between UPDRS score and cortical thickness at baseline. More
+significant clusters were found in FS5 \rev{(8 clusters) than in FS6 (3), FS7 (2), and FS8 (2). The left
+precentral or postcentral gyrus was found in every version.} In the longitudinal analysis the rate of change in
+cortical thickness \rev{significantly correlated with the rate of change in UPDRS score in one region in FS6 (left
+lingual gyrus) and two in FS8 (right precuneus and middle temporal gyrus), and in none in FS5 and FS7.} The results
+are reported in Table~\ref{tab:4}.
+
+\begin{table}[H]
+\centering\small
+\caption{Vertex-wise correlation between UPDRS score and cortical thickness at baseline, and the correlation
+between the rate of change in UPDRS and the rate of change in cortical thickness.}\label{tab:4}
+\input{tables/table5}
+\par\smallskip\parbox{\linewidth}{\footnotesize \rev{L/R: left/right hemisphere; Max: maximum signed} $-\log_{10}$(p-value) in the
+cluster. \rev{Regions: Desikan-Killiany label of the cluster's peak.} \rev{Partial correlation was used to
+test the correlations (PD-non-MCI, n = 138).} Cluster-wise p-value threshold was used at the p $<$ .05
+level.}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{fig7_corr_base}
+\caption{Vertex-wise correlation between UPDRS score and cortical thickness at baseline. \rev{Significant clusters
+(cluster-wise p $<$ .05), signed $-\log_{10}$(p) on the fsaverage inflated surface. Unthresholded map: Figure S10.}}\label{fig:7}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{fig8_corr_long}
+\caption{Vertex-wise correlation between the rate of change in UPDRS and the rate of change in cortical thickness.
+Correlations in FreeSurfer 5 and 7 were not significant. \rev{Unthresholded map: Figure S11.}}\label{fig:8}
+\end{figure}
+
+\paragraph{Group analyses}
+\rev{There were significant vertex-wise group differences between HC and PD-non-MCI patients in cortical thickness
+at baseline in two regions in FS5 (left postcentral and rostral middle frontal) and two in FS6 (right inferior
+parietal and rostral middle frontal), and none in FS7 and FS8.} Additionally, we found significant group
+differences in the rate of change in cortical \rev{thickness} in multiple regions across different FS versions.
+More significant clusters were found in FS5 \rev{(4 clusters) than in FS8 (3) and FS6 (1), and none in FS7; the left
+superior temporal gyrus was found in FS5, FS6 and FS8.} The results are reported in Table~\ref{tab:5}. \rev{With
+the image-quality and scanner covariates, most longitudinal group differences disappeared (Table S8).}
+
+\begin{table}[H]
+\centering\small
+\caption{Group differences (HC vs PD-non-MCI) in cortical thickness at baseline and in the rate of change in
+cortical thickness.}\label{tab:5}
+\input{tables/table6}
+\par\smallskip\parbox{\linewidth}{\footnotesize \rev{HC: healthy controls; L/R: left/right hemisphere; Max: maximum signed}
+$-\log_{10}$(p-value) in the cluster; \rev{MCI: mild cognitive impairment; PD: Parkinson's disease.}
+\rev{Regions: Desikan-Killiany label of the cluster's peak. General linear model with age and sex (longitudinal:
+also time between the visits), HC n = 135, PD-non-MCI n = 138.} Cluster-wise p-value threshold was used at the
+p $<$ .05 level.}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{fig9_group_base}
+\caption{Group differences (HC vs PD-non-MCI) in cortical thickness at baseline. Differences in FreeSurfer
+\rev{7 and 8} were not significant. \rev{Unthresholded map: Figure S12.}}\label{fig:9}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{fig10_group_long}
+\caption{Group differences (HC vs PD-non-MCI) in the rate of change in cortical thickness. \rev{Unthresholded map: Figure S13.}}\label{fig:10}
+\end{figure}
+
+\rev{\subsection{Desikan--Killiany atlas}
+
+With the bilateral Desikan--Killiany measures (34 cortical regions; mean thickness and volume, summed surface area),
+the versions differed in 82\% (FS8 vs FS7) to 100\% (FS8 vs FS5) of the regions for thickness, 62\% (FS8 vs FS7) to
+91\% (FS8 vs FS5) for surface area, and 81\% (FS7 vs FS6) to 96\% (FS8 vs FS5) for volume (cortical and
+subcortical), so the larger regions of this atlas did not reduce the share of regions affected. FS8 and FS7 were
+again the closest pair for surface area and thickness, mostly through the frontal, parietal and occipital regions
+(40--50\% of these regions differed in surface area, against all insular and temporal regions). PD and HC did not differ in software variability (1 of 822 tests). In the clinical analyses,
+one cingulate region per version differed between PD-non-MCI and HC in baseline volume (posterior cingulate in FS5,
+caudal anterior cingulate in FS6--8), and FS7 and FS8 also found the caudal anterior cingulate in surface area. In
+the rate of change, the pars opercularis differed in surface area in every version, with the middle temporal gyrus
+added in FS7 and FS8 and the pars triangularis in FS8; the volume of the lingual gyrus (FS6) and of the fusiform
+gyrus (FS7) differed in one version each. No version found a difference in thickness, and no region correlated with
+UPDRS-III after correction ($\alpha = 0.05/34$).}
+
+\rev{\subsection{Accuracy against manual labels (Mindboggle-101)}
+
+All four versions processed the 101 Mindboggle-101 images. Agreement with the manual DKT31 labels decreased slightly
+but consistently from the oldest to the newest version (Figure~S7): the mean Dice per image (mean $\pm$ SD) was
+0.838 $\pm$ 0.023 in FS5, 0.829 $\pm$ 0.030 in FS6, 0.823 $\pm$ 0.029 in FS7 and 0.816 $\pm$ 0.029 in FS8 with
+the DKT parcellation, and 0.796,
+0.784, 0.780 and 0.774 with the DK parcellation. In every version pair, the newer version had a lower Dice than the
+older one ($p < 0.001$ for all 12 tests); FS8 was below FS5 in 100 of the 101 images (DKT) and in all 101 (DK),
+by 0.022 on average. Region by region, FS8 had a lower Dice than FS5 in 54 of the 62 regions with the DKT
+parcellation (50 with DK) and no region had a higher Dice in FS8 than in FS5 (2 regions with DK); FS7 and FS6 were the closest pair (18 regions lower
+and one higher with DKT, 13 lower with DK). The largest decreases from FS5 to FS8 were in the entorhinal ($-0.05$),
+pericalcarine ($-0.04$ to $-0.05$), caudal anterior cingulate and parahippocampal ($-0.04$) regions, while the pars
+triangularis (both hemispheres) and the right pars opercularis and pars orbitalis did not change (DKT). The decrease
+was found in every lobe and in every Mindboggle-101 sub-dataset with more than one image. Region volumes were
+slightly overestimated in every version (median relative error $+0.2$ to $+3.8$\% with the DKT parcellation), with
+a median absolute error of 7.5\% (FS5) to 8.6\% (FS6).}
+
+\section{Discussion}
+
+This study investigated the impact of software variability resulting from FreeSurfer version updates on the
+estimation of MRI-derived structural brain measures and the impact of this measurement variability on the
+relationships between brain measures and clinical outcomes in Parkinson's disease. We observed variability across
+many brain regions in the estimation of volume, surface area, and cortical thickness. The differences were more
+wide-spread when comparing FS5 to the newer FreeSurfer versions while the differences between FS7 and FS6 were less
+prevalent, although were still common. \rev{The differences between FS8 and FS7 were the least prevalent for surface
+area and cortical thickness.} Our results are in line with previous research on FreeSurfer software variability
+(Bhagwat et al., 2021; Gronenschild et al., 2012; Haddad et al., 2023) although these studies focused on different
+FreeSurfer release versions. Relatively higher similarity between FS7 and FS6 in our study is in line with results
+reported by Haddad et al. (2023) who report the lowest compatibility with FS5. Our data support the notion that the
+choice of the software version may impact the estimation of structural measures. Importantly, not all regions were
+equally impacted by the software variability and we found no differences in some of the regions. Volume estimation
+of subcortical structures was relatively \rev{less} impacted by the variability between FS7 and FS6 which is in
+line with Haddad et al. (2023). This could suggest that researchers focusing solely on these structures or volume
+measures should not worry about the choice of the software. However, we refrain from such recommendations since
+there is no clear pattern of regions that are less susceptible to the variability.
+
+\rev{FS8 departed from FS7 mainly in subcortical volumes (Results, Stage I), which we relate below to the
+methodological changes between the versions. Because FS8 no longer produces the vessel, choroid plexus, optic chiasm
+and 5th ventricle labels, these structures cannot be carried over in longitudinal or multi-version studies.}
+
+The impact of software variability on the estimation of all three structural measures is the same in patients
+with PD and HC as we did not find any differences between these two groups \rev{(one region out of 2,874 tests)}.
+It suggests that the variability introduced by different preprocessing toolboxes might also be present in other
+cohorts. This result supports the fact that existing software variability results (such as Botvinik-Nezer et al.,
+2020; Filip et al., 2022; Gronenschild et al., 2012) could also apply to the PD populations similar to the PPMI and
+QPN samples tested in our study.
+
+\rev{Differences in image quality between the groups do not explain this result. PD and HC images differed in
+eight of the ten MRIQC metrics before correction for multiple comparisons; PD images had a lower coefficient of
+joint variation and higher contrast-to-noise and signal-to-noise ratios, that is, slightly better image quality,
+but also a higher Mortamet's quality index 1, which measures artefactual intensities in the background (air)
+of the image and is higher when artefacts are more extensive. Adjusting the group comparison of software variability for the total
+signal-to-noise ratio and the scanner manufacturer left it unchanged (one significant test out of 2,874 without the
+covariates, three with them). Image quality was nevertheless associated with software variability within the
+sample: the coefficient of joint variation and the contrast-to-noise ratio correlated with the differences between
+versions in 152 and 143 of the 888 thickness tests ($|r| \le .38$), and the gray-matter and total signal-to-noise
+ratios had the strongest correlations, with volume differences ($|r|$ up to .62). Software variability therefore depends on image quality at the level of
+individual images, while the two groups have similar variability once their images are compared directly. This
+agrees with Sanz-Robinson et al. (2023), who found no correlation between data quality and the difference between
+FreeSurfer and FSL hippocampal volumes, and it may not hold in populations with markedly lower image quality (e.g.,
+children or patients with more severe motor symptoms).}
+
+\rev{Image quality and scanner matter more for the clinical analyses than for software variability. The scanner
+manufacturer differed between the clinical groups ($\chi^2 = 10.4$, $p = .005$; 17 PD-non-MCI and 3 HC scanned on
+Philips systems). With the signal-to-noise ratio and the manufacturer as covariates, the subcortical results were
+largely unchanged (Table S7), but the vertex-wise group differences in the rate of change in thickness almost
+disappeared: one cluster remained in FS8 and none in FS5, FS6 or FS7 (Table S8). Part of these longitudinal
+differences may therefore reflect acquisition differences between the groups rather than disease, independently of
+the FreeSurfer version.}
+
+To test the impact of software variability in a clinical setting, we investigated the differences between
+FreeSurfer versions in the testing of clinical hypotheses. We tested group differences (patients vs healthy
+participants) in subcortical volumes and cortical thickness as well as the correlation between disease severity in
+patients and their cortical thickness. These hypotheses were derived from prior neuroimaging studies on PD (Hanganu
+et al., 2014; Mak et al., 2015; for review see Mitchell et al., 2021). To our knowledge this is the first attempt
+to assess the degree of impact of software variability on clinical findings in the PD population.
+
+The significance of the differences between PD and HC in the estimation of the subcortical volumes was impacted by
+software variability. The \rev{result agreement} of subcortical volumes between FS versions ranged from
+\rev{.57 to 1}. Inconsistent results are in line with the study by Filip et al. (2022) who reported variability
+across FS versions in the group differences in volume estimation in patients with diabetes. \rev{The significant group differences were larger subcortical volumes in PD-non-MCI than in HC, the opposite of the atrophy reported in PD (Mitchell et al., 2021). This direction did not depend on the version and held after adjusting for image quality and scanner manufacturer; after adjusting for intracranial volume, the differences were smaller and remained significant only in FS6 and FS7, in the same direction. It may reflect the composition of this sample of early PD patients (67\% men against 47\% in HC, larger intracranial volume) rather than a disease effect, and the clinical analyses of this study were not designed to establish it. Our question was whether different versions reach the same conclusion:} various research teams, addressing the same clinical question, may or may not obtain significant results depending on the software they use. We have also found a significant correlation between the baseline volume of the right putamen
+and the disease severity in \rev{one FS version (FS6), with p-values close to the corrected threshold in FS7
+($p = .004$) and FS5 ($p = .010$) and a weaker correlation in FS8 ($p = .017$). The correlation had the same sign and similar strength in the four versions (partial $r = -.20$ to $-.25$; Table~\ref{tab:3}),
+so its significance depended on the version only because it was close to the threshold.} There are prior studies that indicate the link between the putamen volume and disease severity in PD
+(Mak et al., 2014; Wilson et al., 2019).
+
+\rev{The subcortical segmentation of FS8 had the largest effect on the clinical results. The result
+agreement of the significant group differences at baseline was lowest for the pairs that include FS8 (.57 with
+FS7, .67 with FS5 and FS6): the bilateral thalamus was significant in every version, but FS8 was the only version
+to detect the left accumbens area and the only version not to detect the right hippocampus. In the
+longitudinal analysis, FS8 was the only version with a significant group difference in the left caudate. At the
+vertex level, FS8 and FS7 agreed more closely: both found two baseline clusters of correlation with disease
+severity, each including the left sensorimotor cortex (left postcentral gyrus in FS8, left precentral gyrus in
+FS7), and neither found a baseline group difference. They differed on the group difference in the rate of change in
+thickness: three clusters in FS8, including the left superior temporal gyrus, and none in FS7. The longitudinal correlation with disease severity was significant in two right
+hemisphere clusters (precuneus and middle temporal gyrus) in FS8 only. Agreement between two versions on cortical
+measures therefore did not imply agreement on the clinical results, and the version with the most recent
+segmentation methods changed the subcortical findings the most.}
+
+Vertex-wise analyses yielded different results depending on the FS version. There was a correlation between the
+disease severity and cortical thickness in numerous regions in FS5, a few in FS6, and only \rev{two significant
+clusters in FS7 and in FS8}. This is not surprising given previous reports showing that FS5 is often less stringent
+than more recent versions (Filip et al., 2022; Haddad et al., 2023).
+
+\rev{FS5 and FS6 reported group differences between HC and PD-non-MCI in cortical thickness at baseline, FS7 and
+FS8 did not.} This again would support the notion that \rev{older versions are} more permissive. This was also
+observed in the longitudinal rate of change in cortical thickness where FS5 gave more significant regions than the
+other \rev{three} FS versions. Furthermore, reporting regions' labels is not sufficient
+to determine similarity between the output. \rev{For example, FS5, FS6 and FS8 reported a group difference in
+the rate of change in thickness of the left superior temporal gyrus, but the maps (Figure~\ref{fig:10}) show
+clusters at different positions along the gyrus: the FS6 cluster (peak at $y = -28$ mm) and the FS8 cluster (peak at
+$y = -13$ mm) share no vertex, and the FS5 cluster (peak at $y = -21$ mm) partly overlaps both (Sørensen--Dice
+coefficient .36 with FS6 and .16 with FS8).}
+
+\rev{Differences between versions are not the only source of computational variability in these measures. Within
+one version, numerical variability arising from floating-point computation changes FreeSurfer's outputs across
+computing environments. Perturbing FreeSurfer 7.3.1 with Monte Carlo arithmetic in PD patients and controls from
+PPMI, Chatelain et al.\ (2026) found that numerical variability amounted on average to 18\% of the between-subject
+variability in cross-sectional analyses and 55\% in longitudinal analyses. It changed the significance of group
+differences and of correlations with UPDRS-III, more often in longitudinal analyses, and no difference in numerical variability was found between patients and controls. Similarly, we found almost
+no difference in software variability between versions between PD and HC (1 of 2,874 tests); these tests detect
+differences but do not establish equivalence, so they show only that no large group difference in either source of
+variability was detected in these samples. The effect on significance agrees with two of our observations: the clinical results that depended on the version were close to the significance threshold, as the
+correlation between the right putamen volume and disease severity, and the longitudinal results agreed less
+between versions than the cross-sectional ones (for the rate of change in subcortical volumes, the result
+agreement was zero for every pair with at least one significant structure). Results close to the threshold are therefore fragile to both the version and the numerical environment,
+and effect sizes with their uncertainty are more informative than the significance of a single analysis.}
+
+\rev{To relate the differences to the software, we compared the programs and atlases each version ran at each
+step of \texttt{recon-all} in our runs with the release notes (Table S39). The three transitions differ in kind.
+FS5 to FS6 kept the same programs but retrained every atlas: the subcortical atlas used for skull stripping and
+segmentation, the spherical folding atlas, and the three cortical parcellation atlases. This is consistent with
+FS6 and FS5 being the pair with the most thickness differences, and with the changes in small subcortical labels
+such as the 5th ventricle. FS6 to FS7 replaced bias-field correction (N3 by N4), added denoising before the white
+surface and replaced the surface placement program (\texttt{mris\_make\_surfaces} by \texttt{mris\_place\_surface},
+with remeshing and a pial surface pinned to the white surface in the medial wall), with a new subcortical atlas;
+these changes act on the surfaces from which area and thickness are computed. The transition from FS7 to FS8 changed the steps that precede surface reconstruction. In our
+runs, FS8 replaced the watershed skull stripping by SynthStrip (Hoopes et al., 2022), the Talairach registration
+by SynthMorph (Hoffmann et al., 2022), and the atlas-based subcortical labeling (\texttt{mri\_ca\_register} and
+\texttt{mri\_ca\_label}) by SynthSeg (Billot et al., 2023), and it added deep-learning segmentations of the dura,
+the venous sinuses and the entorhinal white matter to guide pial surface placement. The surface placement program
+(\texttt{mris\_place\_surface}), the spherical registration atlas and the cortical parcellation atlases are the
+same as in FS7. This division matches our results: FS8 departs from FS7 mainly in subcortical volumes, which depend
+on the replaced segmentation, while surface area and thickness, computed with the same surface and parcellation
+tools, show the fewest differences of the six pairs. The cortical differences that remain between FS8 and FS7 may
+come from the new skull stripping and the deep-learning guidance of the pial surface, which act before surface
+placement.} \rev{In FS8, the subcortical segmentation from which the volumes are computed
+(\texttt{aseg.auto\_noCCseg.mgz}) is the SynthSeg output itself; \texttt{mri\_ca\_label} is not run.}
+
+Our study comes with limitations. We investigated one release of the major FS versions. Testing more versions,
+including minor releases, could provide more insight into software variability, whether there are differences
+between minor releases, and what could be the causes for the observed differences. Importantly, our study does not
+provide information on analytical accuracy. Reported data shows that there are differences in the estimation of
+structural metrics between FS versions, however, it is not possible to conclude from our data which version is
+more accurate. \rev{Moreover, the clinical consequences of the measurement differences were limited to the
+analyses where the group differences or correlations were close to the significance threshold: the group
+differences between PD-non-MCI and HC in subcortical volumes were significant in the bilateral thalamus in every
+version, and differed between versions only for structures with weaker effects. Whether these measurement differences change conclusions in PD studies with larger effects (e.g., later disease
+stages or PD with dementia) remains to be tested.} \rev{The comparison with the manual labels of Mindboggle-101
+partly addresses the question of accuracy, for the cortical parcellation: newer versions were not closer to the
+manual labels, and the agreement decreased slightly from FS5 to FS8 (mean Dice 0.838 to 0.816). This decrease is
+small compared with the differences between images (SD of the mean Dice about 0.03) but systematic, and it was
+found with both the DKT and the DK parcellations, so it is not explained by the FS5 DKT atlas having been built from
+Mindboggle-101 images. It does not mean that the measures of newer versions are less valid: the manual labels follow
+one protocol, the atlases of FS6 and later were retrained on other images, and the regions where agreement
+decreased most (entorhinal, parahippocampal, pericalcarine) have boundaries that depend strongly on the labelling
+protocol. No manual subcortical reference was available in this dataset, so the accuracy of the subcortical
+volumes, which carried the clinical results, remains untested.} \rev{Our study does not measure the scan--rescan variability of each version, against which
+the differences between versions could be compared; Haddad et al.\ (2023) measured it, together with the
+compatibility between versions, for FreeSurfer 5.3, 6.0 and 7.1 on three test-retest datasets.}
+
+In conclusion, our results show that the variability across FreeSurfer versions impacts clinical results in the
+studied PD populations at both subcortical volumetric and vertex-wise levels. The results differed even though we
+used the same sample as well as the same preprocessing and statistical pipeline. Importantly, estimation of
+structural metrics is impacted by software variability regardless of the sample with similar results across
+patients with PD and HC. Observed variability is most likely not reserved solely to FreeSurfer since previous
+studies reported variability in other analytical software. Our recommendation to users is to facilitate the latest
+available release of the toolbox unless there is a particular reason to use another release. The most recent
+software versions usually have improved algorithms and fixed issues discovered in previous releases which ensures
+staying in line with current standards in the ever-changing field of neuroscience. \rev{The FS8 results qualify this recommendation for subcortical volumes: a study that
+moves from FS7 to FS8 should expect changes of its subcortical findings larger than those of its cortical
+findings.} Software versions should not be
+updated during studies as it might introduce additional variability to the experiment.
+
+\rev{FreeSurfer's release notes list the methodological changes of each version, and its mailing list supports
+past releases, but neither quantifies how a change affects the measures. Releasing, with each version, the
+differences in regional measures on a fixed reference dataset (for example, the PPMI images analyzed here) would
+let users anticipate the effect of an update on their own analyses; numerical variability tests such as those of
+Chatelain et al. (2023) could separate these effects from numerical noise.} Future studies may
+also implement a multiverse approach to investigate clinical questions with several different software releases.
+
+\section*{Acknowledgments}
+This work was funded by the Michael J. Fox Foundation for Parkinson's Research (MJFF-021134). Computational analyses
+were performed on the Narval \rev{and Rorqual clusters} hosted at Calcul Québec and part of Digital Research
+Alliance of Canada.
+
+\section*{Supplementary material}
+\rev{Supplementary figures S1--S4 and tables S1--S8 are in the supplementary file; Tables S9--S28 (correlations
+between MRIQC metrics and software variability) are provided as CSV files.}
+
+\section*{References}
+\begingroup\small\setlength{\parindent}{0pt}\setlength{\parskip}{0.5ex}
+\input{references}
+\endgroup
+
+\end{document}

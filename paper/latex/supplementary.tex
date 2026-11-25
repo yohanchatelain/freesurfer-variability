@@ -1,0 +1,319 @@
+\documentclass[11pt]{article}
+\input{preamble}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
+
+\title{Supplementary material\\[1ex]\large The impact of FreeSurfer versions on structural neuroimaging analyses of
+Parkinson's disease}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Contents}
+\begin{tabular}{lp{0.75\linewidth}}
+Figure S1 & Subcortical volume estimates per FreeSurfer version \\
+Figure S2 & Cortical volume, surface area and thickness estimates per FreeSurfer version \\
+Figure S3 & Hippocampus segmentation: between-subject vs between-version differences \\
+Figure S4 & Segmentation overlap (Sørensen--Dice) between FreeSurfer versions \\
+Figure S5 & \rev{Relative differences between versions in subcortical volumes, by structure type} \\
+Figure S6 & \rev{Relative differences between versions in cortical measures, by lobe} \\
+Figure S7 & \rev{Accuracy against the manual labels of Mindboggle-101} \\
+Figures S8--S13 & \rev{Unthresholded maps of Figures 7--12} \\
+Table S1 & Differences between versions, all images \\
+Table S2 & Differences between versions, PD images \\
+Table S3 & Differences between versions, HC images \\
+Table S4 & PD vs HC differences in software variability \\
+Table S5 & PD vs HC differences in software variability, adjusted for image quality and scanner \\
+Table S6 & Differences between versions, QPN replication sample \\
+Table S7 & Subcortical clinical analyses (Tables 3--4) adjusted for image quality and scanner \\
+Table S8 & Vertex-wise analyses (Tables 5--6) adjusted for image quality and scanner \\
+Tables S9--S18 & MRIQC metrics vs software variability, all images (CSV) \\
+Tables S19--S28 & MRIQC metrics vs software variability, PD images (CSV) \\
+Tables S29--S38 & MRIQC metrics vs software variability, QPN PD images (CSV) \\
+Table S39 & \rev{Methodological changes between the FreeSurfer versions} \\
+Table S40 & \rev{Asymmetry of the differences between versions (left vs right)} \\
+\end{tabular}
+
+\rev{\noindent\textit{Numbering relative to the submitted supplement.} Figures S1--S4 (estimates) $\rightarrow$
+S1--S2; S5 $\rightarrow$ S3; S6--S8 (right hemisphere) $\rightarrow$ merged into Figures 4--6 of the manuscript;
+S9 $\rightarrow$ S4; Figures S5--S7 are new. Tables S1--S4 unchanged; S7 (QPN) $\rightarrow$ S6; S8--S16
+$\rightarrow$ S9--S18 (10 MRIQC metrics instead of 9); S17--S25 $\rightarrow$ S19--S28; S26--S34 $\rightarrow$
+S29--S38; Tables S5, S7, S8, S39 and S40 are new. The submitted Tables S5 and S6, which the text did not cite, were
+removed.}
+
+\clearpage
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{estimates_subcortical_part1}
+\caption{Subcortical volume estimates per FreeSurfer version (830 images)\rev{, (a) lateral ventricles, cerebellum
+(white matter and cortex) and brainstem, (b) other structures, on separate axes because their volumes are an order
+of magnitude larger. The FS8 CSF volume is not shown: it includes the extracerebral CSF and is not comparable with
+the other versions. Outliers beyond the x-axis range are not shown.}}
+\end{figure}
+
+\begin{figure}[p]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{estimates_subcortical_part2}
+\caption{\rev{(continued) (b) Other subcortical structures.}}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{estimates_cortical_vol_part1}
+\caption{Cortical volume, surface area and thickness estimates per FreeSurfer version (Destrieux atlas, 830
+images)\rev{: (a) volume, (b) surface area, (c) cortical thickness, in the left (left panels) and right (right
+panels) hemispheres, each in two parts: limbic, frontal and temporal regions, then occipital, parietal and other
+regions. Outliers beyond the x-axis range are not shown.}}
+\end{figure}
+
+\begin{figure}[p]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{estimates_cortical_vol_part2}
+\caption{\rev{(continued) (a) Volume: occipital, parietal and other regions.}}
+\end{figure}
+
+\begin{figure}[p]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{estimates_cortical_surf_part1}
+\caption{\rev{(continued) (b) Surface area: limbic, frontal and temporal regions.}}
+\end{figure}
+
+\begin{figure}[p]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{estimates_cortical_surf_part2}
+\caption{\rev{(continued) (b) Surface area: occipital, parietal and other regions.}}
+\end{figure}
+
+\begin{figure}[p]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{estimates_cortical_ct_part1}
+\caption{\rev{(continued) (c) Cortical thickness: limbic, frontal and temporal regions.}}
+\end{figure}
+
+\begin{figure}[p]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{estimates_cortical_ct_part2}
+\caption{\rev{(continued) (c) Cortical thickness: occipital, parietal and other regions.}}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth]{hippocampi_example}
+\caption{Hippocampus segmentations: between-subject vs between-version differences. (A) Left (L) and right (R)
+hippocampi of two participants segmented with the same FreeSurfer version, overlaid in red and blue (overlap in
+purple). (B) Hippocampi of one participant segmented with two FreeSurfer versions, overlaid in the same way. Top:
+lateral views; bottom: superior (S) and inferior (I) views. The two participants differ more in shape and overlap
+than the two versions in the same participant, in line with the larger between-subject than between-version
+variability of the left hippocampus (Figure~3). \rev{Figure from the submitted manuscript (FreeSurfer 5.3--7.3.2).}}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{segmentation_dice_part1}
+\caption{Segmentation overlap between FreeSurfer versions: Sørensen--Dice coefficient of each label
+(\texttt{mri\_seg\_overlap}, aseg and Destrieux parcellation), per version pair\rev{, in the left (left panels) and
+right (right panels) hemispheres: (a) limbic, frontal and temporal regions, (b) occipital, parietal and other
+regions and subcortical structures. Labels without a hemisphere (midline structures) are not shown.}}
+\end{figure}
+
+\begin{figure}[p]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{segmentation_dice_part2}
+\caption{\rev{(continued) (b) Occipital, parietal and other regions, and subcortical structures.}}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{variability_by_type_subcortical}
+\caption{\rev{Relative differences between FreeSurfer versions in subcortical volumes, by structure type (830
+images; left and right merged: bilateral volume = left + right). Boxes: $|A - B|/B$ in \% for each version pair
+(log scale); black markers: between-subject coefficient of variation (SD/mean, \%) of each version. Labels that FS8
+does not produce (vessel, choroid plexus, optic chiasm, 5th ventricle) or defines differently (CSF, which in FS8
+includes the extracerebral CSF) are left out of the FS8 pairs.}}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{variability_by_type_cortical}
+\caption{\rev{Relative differences between FreeSurfer versions in cortical volume, surface area and thickness by
+lobe (Destrieux atlas, bilateral measures: mean of the two hemispheres for thickness and volume, sum for surface
+area; 830 images). For each image, the median of $|A - B|/B$ (\%) over the regions of the lobe; ``other'': insular
+and boundary regions.}}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth]{mindboggle_dice}
+\caption{\rev{Accuracy of the cortical parcellation of each FreeSurfer version against the manual DKT31 labels of
+Mindboggle-101 (101 images). Left and middle: Sørensen--Dice coefficient of each image (mean over the 62 DKT31
+regions) for the DKT and DK parcellations, resampled to the native T1-weighted space. Right: mean Dice per lobe, DKT
+parcellation. The DKT atlas of FS5 was built from 40 of the Mindboggle-101 images.}}\label{fig:S7}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{unthresholded_subcortical_group}
+\caption{\rev{Unthresholded version of Figure 7: group differences (ANCOVA, HC vs PD-non-MCI) in subcortical volumes. Every structure is coloured by its uncorrected p-value ($-\log_{10}$ scale, signed), without threshold; one row per FreeSurfer version, baseline (left) and rate of change (right). Red: larger in HC; blue: larger in PD-non-MCI. Black lines on the colour bar: Bonferroni threshold of Table 3 ($p = 0.05/14$).}}\label{fig:S8}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{unthresholded_subcortical_corr}
+\caption{\rev{Unthresholded version of Figure 8: partial correlation between subcortical volumes and UPDRS-III in PD-non-MCI. Every structure is coloured by its uncorrected p-value ($-\log_{10}$ scale, signed), without threshold; one row per FreeSurfer version, baseline (left) and rate of change (right). Red: positive correlation; blue: negative. Black lines on the colour bar: Bonferroni threshold of Table 4 ($p = 0.05/14$).}}\label{fig:S9}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{unthresholded_corr_base}
+\caption{\rev{Unthresholded version of Figure 9: vertex-wise correlation between UPDRS-III and cortical thickness at baseline. Every vertex is coloured by its uncorrected vertex-wise p-value ($-\log_{10}$ scale, signed; FreeSurfer \texttt{mri\_glmfit} \texttt{sig.mgh}), without threshold, on the fsaverage inflated surface; gray: no value (medial wall). One row per FreeSurfer version.}}\label{fig:S10}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{unthresholded_corr_long}
+\caption{\rev{Unthresholded version of Figure 10: vertex-wise correlation between the change in UPDRS-III and the rate of change in cortical thickness. Every vertex is coloured by its uncorrected vertex-wise p-value ($-\log_{10}$ scale, signed; FreeSurfer \texttt{mri\_glmfit} \texttt{sig.mgh}), without threshold, on the fsaverage inflated surface; gray: no value (medial wall). One row per FreeSurfer version.}}\label{fig:S11}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{unthresholded_group_base}
+\caption{\rev{Unthresholded version of Figure 11: vertex-wise group differences (HC vs PD-non-MCI) in cortical thickness at baseline. Every vertex is coloured by its uncorrected vertex-wise p-value ($-\log_{10}$ scale, signed; FreeSurfer \texttt{mri\_glmfit} \texttt{sig.mgh}), without threshold, on the fsaverage inflated surface; gray: no value (medial wall). One row per FreeSurfer version.}}\label{fig:S12}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{unthresholded_group_long}
+\caption{\rev{Unthresholded version of Figure 12: vertex-wise group differences (HC vs PD-non-MCI) in the rate of change in cortical thickness. Every vertex is coloured by its uncorrected vertex-wise p-value ($-\log_{10}$ scale, signed; FreeSurfer \texttt{mri\_glmfit} \texttt{sig.mgh}), without threshold, on the fsaverage inflated surface; gray: no value (medial wall). One row per FreeSurfer version.}}\label{fig:S13}
+\end{figure}
+
+\clearpage
+\begin{landscape}
+\input{tables/tableS1}
+\clearpage
+\input{tables/tableS2}
+\clearpage
+\input{tables/tableS3}
+\clearpage
+\input{tables/tableS4}
+\clearpage
+\input{tables/tableS5}
+\end{landscape}
+
+\clearpage
+\setcounter{table}{5}
+\begin{landscape}
+\input{tables/tableS6}
+\end{landscape}
+
+\clearpage
+
+\begin{table}[H]
+\centering\scriptsize\setlength{\tabcolsep}{2.5pt}
+\caption{Subcortical clinical analyses adjusted for image quality (MRIQC total SNR) and scanner manufacturer.
+(a) ANCOVA, PD-non-MCI vs HC; (b) partial correlation with UPDRS-III in PD-non-MCI. Raw p-values, exact; in bold:
+significant after Bonferroni correction ($p < 0.05/14 = 0.0036$).}
+\textbf{(a) Group differences}\par\smallskip
+\input{tables/tableS7a}
+\par\bigskip\textbf{(b) Correlation with UPDRS-III}\par\smallskip
+\input{tables/tableS7b}
+\end{table}
+
+\begin{table}[H]
+\centering\small
+\caption{Vertex-wise analyses adjusted for image quality (MRIQC total SNR) and scanner manufacturer. (a)
+Correlation with UPDRS-III; (b) HC vs PD-non-MCI. Max, maximum signed $-\log_{10}$(p) in the cluster; cluster-wise
+p $<$ .05.}
+\textbf{(a) Correlation with UPDRS-III}\par\smallskip
+\input{tables/tableS8a}
+\par\bigskip\textbf{(b) Group differences}\par\smallskip
+\input{tables/tableS8b}
+\end{table}
+
+\section*{Tables S9--S38}
+Pearson correlations between the MRIQC metrics of the first-visit images (coefficient of joint variation,
+contrast-to-noise ratio, foreground-to-background energy ratio, Mortamet's quality indices 1 and 2, residual partial
+gray matter volume effect, gray matter and total signal-to-noise ratio, Dietrich's gray matter and total
+signal-to-noise ratio) and the relative differences between FreeSurfer versions, one table per metric. Raw p-values;
+significance after Bonferroni correction for the regions and the 10 metrics. Provided as CSV files:
+\url{TablesS9-S18_mriqc_correlations_all_images.csv} (415 images),
+\url{TablesS19-S28_mriqc_correlations_PD_images.csv} (280 images) and, for the PD patients of the QPN replication
+sample, \url{TablesS29-S38_mriqc_correlations_QPN_PD_images.csv} (201 images). \rev{Each file has one row per
+metric, measure and region and, for each of the six version pairs, three columns: the correlation coefficient
+$r$, the exact raw p-value (three significant digits; n/a when not tested) and \texttt{sig}, which is ``*'' when
+the correlation is significant after correction. The table below summarizes them.}
+
+\begin{table}[H]
+\centering\footnotesize
+\caption*{\rev{Summary of Tables S9--S38. For each sample, MRIQC metric and measure: number of significant
+correlations (Sig.) between the metric and the relative differences between versions, over all regions and the six
+version pairs (Bonferroni correction for the regions and the 10 metrics), and the largest absolute correlation
+coefficient (Max $|r|$). Volume includes the subcortical structures; the labels that FS8 does not produce or
+defines differently are not tested in the FS8 pairs. GM, gray matter.}}
+\input{tables/tableS9_summary}
+\end{table}
+
+\clearpage
+\begin{landscape}
+\setcounter{table}{38}
+{\footnotesize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{p{3.2cm}p{4.2cm}p{4.6cm}p{4.6cm}p{5.2cm}}
+\caption{\rev{Methodological changes between the FreeSurfer versions used in this study, step by step for the
+default cross-sectional \texttt{recon-all -all}. Sources: the \texttt{recon-all} command logs of our runs (build
+stamps v5.3.0, v6.0.1-f53a55a, 7.3.2-20220804-6354275, 8.2.0-20260314-d932c45) and the FreeSurfer release notes.
+Bug fixes and packaging changes are not listed; \textbf{bold} marks a change from the previous version.}}
+\label{tab:S39}\\
+\toprule
+Step & FS 5.3 & FS 6.0.1 & FS 7.3.2 & FS 8.2.0 \\
+\midrule\endfirsthead
+\toprule
+Step & FS 5.3 & FS 6.0.1 & FS 7.3.2 & FS 8.2.0 \\
+\midrule\endhead
+\bottomrule\endfoot
+Bias-field correction & N3 & N3 & \textbf{ANTs N4} & N4 \\
+Affine (Talairach) registration & \texttt{talairach\_avi} & \texttt{talairach\_avi} (retry with an older atlas if
+the check fails) & \texttt{talairach\_avi} & \textbf{SynthMorph} \\
+Skull stripping & watershed + GCA (2008 atlas) & watershed + \textbf{new GCA (2016)} & watershed + \textbf{new GCA
+(2020)} & \textbf{SynthStrip} \\
+Subcortical segmentation (aseg) & GCA registration and labelling, atlas 2008 & same tools, \textbf{new atlas
+(2016)}, relabelling of unlikely voxels & same tools, \textbf{new atlas (2020)} & \textbf{SynthSeg} (deep learning;
+no GCA labelling); no vessel, choroid plexus, optic chiasm or 5th ventricle labels \\
+Segmentations before the surfaces & -- & -- & -- & \textbf{deep-learning segmentation of dura, venous sinuses and
+entorhinal white matter} \\
+Denoising & -- & -- & \textbf{ANTs denoising} (white surface only) & same \\
+White and pial surfaces & \texttt{mris\_make\_surfaces} & \texttt{mris\_make\_surfaces} with the aseg;
+\textbf{improved cortex label}, surfaces kept within each hemisphere & \textbf{\texttt{mris\_place\_surface}}, white
+surface remeshed, pial surface pinned to the white surface in the medial wall & \texttt{mris\_place\_surface} with
+\textbf{fixes on by default} (e.g., inferior frontal over-extension) \\
+Thickness, area, curvature & \texttt{mris\_make\_surfaces} & same & computed by \texttt{mris\_place\_surface}; same
+definitions & same \\
+Spherical registration atlas & buckner40 & \textbf{new folding atlas} (acfb40, 2016) & same as 6 & same as 6 \\
+Cortical parcellation atlases (DK, Destrieux, DKT) & 2009--2010 atlases & \textbf{all retrained} (acfb40, 2016) &
+same as 6 & same as 6 \\
+Volume-based cortical labels (\texttt{aparc+aseg}) & \texttt{mri\_aparc2aseg} & \texttt{mri\_aparc2aseg} with
+relabelling & \textbf{\texttt{mri\_surf2volseg}} & same as 7 \\
+Brain volume statistics & \texttt{mri\_segstats} & same & \textbf{\texttt{mri\_brainvol\_stats}} & same;
+\textbf{adds segmentation-based TIV} (eTIV still reported) \\
+\end{longtable}}
+\end{landscape}
+
+\clearpage
+\setcounter{table}{39}
+\begin{table}[H]
+\centering\small
+\caption{\rev{Asymmetry of the differences between FreeSurfer versions. For every structure with a left and a
+right label (14 subcortical structures; 74 Destrieux regions for each cortical measure) and every version pair,
+paired t-test across the 830 images of the left vs right relative difference ($|A - B|/B$). Significant: after
+Bonferroni correction over the structures and pairs of each measure; left/right larger: hemisphere with the larger
+relative difference among the significant tests. FS8 pairs: labels not produced by FS8 left out.}}\label{tab:S40}
+\input{tables/tableS40}
+\end{table}
+
+\end{document}

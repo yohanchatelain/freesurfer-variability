@@ -1,0 +1,65 @@
+{
+    "schema-version": "0.5",
+    "output-files": [
+        {
+            "name": "Output",
+            "optional": false,
+            "description": "output directory",
+            "id": "output",
+            "path-template": "[OUTPUTDIR]"
+        }
+    ],
+    "name": "FreeSurfer7-Recon-all-base",
+    "container-image": {
+        "index": "docker://",
+        "image": "ansokol/freesurfer_7.3.2",
+        "type": "singularity"
+    },
+    "tool-version": "v7.3.2",
+    "command-line": "export SUBJECTS_DIR=`pwd`; export FS_LICENSE=`pwd`/[LICENSE_FILE]; recon-all -base [OUTPUTDIR] -tp [TP1] -tp [TP2] -all",
+    "author": "Laboratory for Computational Neuroimaging ",
+    "error-codes": [
+        {
+            "description": "Crashed",
+            "code": 1
+        }
+    ],
+    "inputs": [
+        {
+            "name": "License file",
+            "value-key": "[LICENSE_FILE]",
+            "optional": false,
+            "description": "Valid license file needed to run FreeSurfer.",
+            "id": "license",
+            "type": "File"
+        },
+        {
+            "name": "Output name",
+            "optional": false,
+            "value-key": "[OUTPUTDIR]",
+            "type": "String",
+            "id": "outputdir"
+        },
+        {
+            "name": "timepoint_1",
+            "optional": false,
+            "value-key": "[TP1]",
+            "description": "Input directory timepoint 1",
+            "type": "String",
+            "id": "tp1"
+        },
+        {
+            "name": "timepoint_2",
+            "optional": false,
+            "value-key": "[TP2]",
+            "description": "Input directory timepoint 2",
+            "type": "String",
+            "id": "tp2"
+        }
+    ],
+    "custom": {
+        "cbrain:author": "Andrzej Sokolowski <andrzej.sokolowski@concordia.ca>",
+        "cbrain:readonly-input-files": true
+    },
+    "description": "create an unbiased template from all time points for each subject and process it with recon-all -base: (https://surfer.nmr.mgh.harvard.edu/fswiki/LongitudinalProcessing)."
+}
